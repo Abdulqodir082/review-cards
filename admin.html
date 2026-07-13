@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Review Cards — Admin</title>
+  <style>
+    :root{--bg:#f5f6f8;--card:#fff;--line:#e2e5ea;--fg:#1c1e21;--muted:#6b7280;--accent:#0a58ca;--ok:#0a7d33;--warn:#b4232a}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;-webkit-text-size-adjust:100%}
+    header{position:sticky;top:0;background:var(--card);border-bottom:1px solid var(--line);padding:14px 16px;display:flex;align-items:center;justify-content:space-between}
+    header h1{font-size:17px;margin:0}
+    .status{font-size:12px;color:var(--muted)}
+    main{max-width:640px;margin:0 auto;padding:16px}
+    .panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+    label{display:block;font-size:13px;color:var(--muted);margin:0 0 6px}
+    input{width:100%;font-size:16px;padding:11px 12px;border:1px solid var(--line);border-radius:9px;background:#fff}
+    .row{display:flex;gap:8px;align-items:center}
+    .row input{flex:1}
+    button{font-size:15px;font-weight:600;padding:11px 14px;border:0;border-radius:9px;background:var(--accent);color:#fff;cursor:pointer}
+    button.secondary{background:#eceef1;color:var(--fg)}
+    button:disabled{opacity:.5;cursor:default}
+    .cfg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .cfg .full{grid-column:1/-1}
+    .cardrow{display:flex;gap:8px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+    .cardrow:first-of-type{border-top:0}
+    .cid{font-weight:700;width:44px;flex:0 0 44px}
+    .cardrow input{flex:1;font-size:14px;padding:9px 10px}
+    .msg{font-size:13px;padding:10px 12px;border-radius:9px;margin-top:10px;display:none}
+    .msg.ok{display:block;background:#e6f4ea;color:var(--ok)}
+    .msg.err{display:block;background:#fdeaea;color:var(--warn)}
+    .hint{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.45}
+    .toolbar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+    .toolbar button{flex:1;min-width:120px}
+    code{background:#eceef1;padding:1px 5px;border-radius:4px;font-size:12px}
+  </style>
+</head>
+<body>
+<header>
+  <h1>Review Cards</h1>
+  <span class="status" id="status">Not connected</span>
+</header>
+
+<main>
+  <div class="panel">
+    <div class="cfg">
+      <div class="full">
+        <label>GitHub username / org</label>
+        <input id="owner" placeholder="e.g. russang082" autocapitalize="off" autocorrect="off" spellcheck="false">
+      </div>
+      <div class="full">
+        <label>Repository name</label>
+        <input id="repo" value="review-cards" autocapitalize="off" autocorrect="off" spellcheck="false">
+      </div>
+      <div class="full">
+        <label>Branch</label>
+        <input id="branch" value="main" autocapitalize="off" autocorrect="off" spellcheck="false">
+      </div>
+      <div class="full">
+        <label>Fine-grained token (Contents: Read &amp; write)</label>
+        <input id="token" type="password" placeholder="github_pat_…" autocapitalize="off" autocorrect="off" spellcheck="false">
+      </div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <button id="load">Connect &amp; load cards</button>
+      <button class="secondary" id="remember">Remember on this phone</button>
+    </div>
+    <div class="hint">
+      The token is stored only in this browser (localStorage) when you tap “Remember”, and is sent
+      directly to GitHub — nowhere else. Use a <b>fine-grained</b> token scoped to just this repo with
+      <b>Contents: Read &amp; write</b>. Revoke it anytime from GitHub → Settings → Developer settings.
+    </div>
+    <div class="msg" id="cfgmsg"></div>
+  </div>
+
+  <div class="panel" id="editor" style="display:none">
+    <div class="toolbar">
+      <button class="secondary" id="add">+ Add card</button>
+      <button id="save">Save changes</button>
+    </div>
+    <div id="rows"></div>
+    <div class="msg" id="savemsg"></div>
+    <div class="hint">
+      Each row is <code>card id → destination URL</code>. Edit a URL and tap <b>Save changes</b> to
+      commit it. Live cards update within a minute (or instantly, since the redirect page cache-busts).
+    </div>
+  </div>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+let sha = null;          // current mapping.json sha, needed to commit
+let apiBase = '';
+let config = {};         // preserved config block (default_destination, etc.)
+
+function gh(path, opts) {
+  return fetch('https://api.github.com' + path, Object.assign({
+    headers: {
+      'Authorization': 'Bearer ' + $('token').value.trim(),
+      'Accept': 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28'
+    }
+  }, opts));
+}
+
+function b64encode(str){ return btoa(unescape(encodeURIComponent(str))); }
+function b64decode(str){ return decodeURIComponent(escape(atob(str))); }
+
+function show(el, ok, text){ el.className = 'msg ' + (ok ? 'ok' : 'err'); el.textContent = text; }
+
+function nextId(map){
+  let max = 0;
+  Object.keys(map).forEach(k => { const n = parseInt(k, 10); if(!isNaN(n) && n > max) max = n; });
+  return String(max + 1).padStart(3, '0');
+}
+
+function renderRows(map){
+  const rows = $('rows');
+  rows.innerHTML = '';
+  Object.keys(map).sort().forEach(id => addRow(id, map[id]));
+}
+
+function addRow(id, url){
+  const wrap = document.createElement('div');
+  wrap.className = 'cardrow';
+  wrap.innerHTML = '<span class="cid"></span>' +
+    '<input class="dest" placeholder="https://…">' +
+    '<button class="secondary del" title="Remove" style="padding:9px 11px">✕</button>';
+  wrap.querySelector('.cid').textContent = id;
+  wrap.dataset.id = id;
+  wrap.querySelector('.dest').value = url || '';
+  wrap.querySelector('.del').onclick = () => wrap.remove();
+  $('rows').appendChild(wrap);
+}
+
+function collect(){
+  const map = {};
+  document.querySelectorAll('.cardrow').forEach(r => {
+    map[r.dataset.id] = r.querySelector('.dest').value.trim();
+  });
+  return map;
+}
+
+async function load(){
+  const owner = $('owner').value.trim(), repo = $('repo').value.trim(), branch = $('branch').value.trim();
+  if(!owner || !repo || !$('token').value.trim()){ show($('cfgmsg'), false, 'Fill in username, repo and token first.'); return; }
+  apiBase = '/repos/' + owner + '/' + repo + '/contents/mapping.json';
+  $('load').disabled = true;
+  try {
+    const r = await gh(apiBase + '?ref=' + encodeURIComponent(branch) + '&t=' + Date.now(), { cache: 'no-store' });
+    if(r.status === 404){ show($('cfgmsg'), false, 'mapping.json not found in that repo/branch.'); return; }
+    if(r.status === 401 || r.status === 403){ show($('cfgmsg'), false, 'Token rejected (' + r.status + '). Check it has Contents: Read & write on this repo.'); return; }
+    if(!r.ok){ show($('cfgmsg'), false, 'GitHub error ' + r.status + '.'); return; }
+    const data = await r.json();
+    sha = data.sha;
+    const map = JSON.parse(b64decode(data.content));
+    config = map.config || {};
+    const cards = map.cards || {};
+    renderRows(cards);
+    $('editor').style.display = 'block';
+    $('status').textContent = 'Connected · ' + Object.keys(cards).length + ' cards';
+    show($('cfgmsg'), true, 'Loaded ' + Object.keys(cards).length + ' cards.');
+  } catch(e){
+    show($('cfgmsg'), false, 'Network error: ' + e.message);
+  } finally {
+    $('load').disabled = false;
+  }
+}
+
+async function save(){
+  const cards = collect();
+  // basic validation
+  for(const id in cards){
+    if(cards[id] && !/^https?:\/\//i.test(cards[id])){ show($('savemsg'), false, 'Card ' + id + ': URL must start with http:// or https://'); return; }
+  }
+  const out = { config: config, cards: cards };
+  const branch = $('branch').value.trim();
+  $('save').disabled = true;
+  try {
+    const body = {
+      message: 'Update card mapping via admin',
+      content: b64encode(JSON.stringify(out, null, 2) + '\n'),
+      sha: sha,
+      branch: branch
+    };
+    const r = await gh(apiBase, { method: 'PUT', body: JSON.stringify(body) });
+    if(r.status === 409){ show($('savemsg'), false, 'Someone else changed the file. Tap Connect & load again, then redo your edit.'); return; }
+    if(!r.ok){ show($('savemsg'), false, 'Save failed (' + r.status + ').'); return; }
+    const data = await r.json();
+    sha = data.content.sha;   // update sha for the next save
+    show($('savemsg'), true, 'Saved. Live cards will use the new links shortly.');
+  } catch(e){
+    show($('savemsg'), false, 'Network error: ' + e.message);
+  } finally {
+    $('save').disabled = false;
+  }
+}
+
+// Persist config (NOT the token) unless "Remember" tapped, which includes the token.
+function saveCfg(withToken){
+  const cfg = { owner:$('owner').value, repo:$('repo').value, branch:$('branch').value };
+  if(withToken) cfg.token = $('token').value;
+  localStorage.setItem('reviewCardsCfg', JSON.stringify(cfg));
+}
+function loadCfg(){
+  try {
+    const cfg = JSON.parse(localStorage.getItem('reviewCardsCfg') || '{}');
+    if(cfg.owner) $('owner').value = cfg.owner;
+    if(cfg.repo) $('repo').value = cfg.repo;
+    if(cfg.branch) $('branch').value = cfg.branch;
+    if(cfg.token) $('token').value = cfg.token;
+  } catch(e){}
+}
+
+$('load').onclick = () => { saveCfg(false); load(); };
+$('save').onclick = save;
+$('add').onclick = () => addRow(nextId(collect()), '');
+$('remember').onclick = () => { saveCfg(true); show($('cfgmsg'), true, 'Saved on this phone.'); };
+loadCfg();
+</script>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Redirecting…</title>
+  <style>
+    html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+    .wrap{height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;color:#333}
+    .spin{width:34px;height:34px;border:3px solid #ddd;border-top-color:#555;border-radius:50%;animation:s 1s linear infinite}
+    @keyframes s{to{transform:rotate(360deg)}}
+    a{color:#0a58ca}
+    .err{max-width:420px;text-align:center;padding:0 20px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="spin" id="spin"></div>
+    <div id="msg">Taking you to the review page…</div>
+  </div>
+  <script>
+    (function () {
+      var params = new URLSearchParams(location.search);
+      var id = (params.get('id') || '').trim();
+
+      function fail(text) {
+        document.getElementById('spin').style.display = 'none';
+        document.getElementById('msg').innerHTML =
+          '<div class="err">' + text + '</div>';
+      }
+
+      if (!id) {
+        fail('No card id in the link. The link should look like <code>r.html?id=001</code>.');
+        return;
+      }
+
+      // Cache-bust so a freshly reassigned card resolves immediately.
+      fetch('mapping.json?t=' + Date.now(), { cache: 'no-store' })
+        .then(function (r) {
+          if (!r.ok) throw new Error('mapping ' + r.status);
+          return r.json();
+        })
+        .then(function (map) {
+          var cards = map.cards || {};
+          var fallback = (map.config && map.config.default_destination) || '';
+          var dest = cards[id] || fallback;
+          if (!dest) {
+            fail('Card <b>' + id + '</b> is not assigned yet, and no default destination is set.');
+            return;
+          }
+          location.replace(dest);
+        })
+        .catch(function () {
+          fail('Could not load the card list. Please try again in a moment.');
+        });
+    })();
+  </script>
+</body>
+</html>
