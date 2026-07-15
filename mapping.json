@@ -4,7 +4,8 @@
     "default_destination": "https://t.me/otvizcards"
   },
   "cards": {
-    "001": "https://t.me/otvizcards",
+    "100": "https://t.me/otvizcards",
+    "001": "https://share.google/BsCusuV7OIMjJQcz9",
     "002": "https://t.me/otvizcards",
     "003": "https://t.me/otvizcards",
     "004": "https://t.me/otvizcards",
@@ -102,7 +103,6 @@
     "096": "https://t.me/otvizcards",
     "097": "https://t.me/otvizcards",
     "098": "https://t.me/otvizcards",
-    "099": "https://t.me/otvizcards",
-    "100": "https://t.me/otvizcards"
+    "099": "https://t.me/otvizcards"
   }
 }
