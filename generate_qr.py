@@ -15,13 +15,14 @@ Then edit the three CONFIG values below and run:
     python generate_qr.py
 """
 
+import csv
 import os
 import qrcode
 
 # ---------------------------------------------------------------------------
 # CONFIG — set these, then run `python generate_qr.py` (no arguments needed).
 # ---------------------------------------------------------------------------
-GITHUB_USER = ""              # <-- FILL THIS IN with your GitHub username before running
+GITHUB_USER = "Abdulqodir082"  # GitHub username that owns the Pages site
 GITHUB_REPO = "review-cards"  # the repo you deploy to GitHub Pages
 NUM_CARDS   = 100             # how many cards to generate
 START_AT    = 1               # first card number
@@ -43,6 +44,7 @@ def main() -> None:
 
     os.makedirs(OUT_DIR, exist_ok=True)
 
+    rows = []  # (card_id, png_filename, url) for the supplier CSV
     for n in range(START_AT, START_AT + NUM_CARDS):
         card_id = f"{n:03d}"                       # 001, 002, …
         url = f"{base_url()}?id={card_id}"
@@ -56,10 +58,18 @@ def main() -> None:
         qr.make(fit=True)
         img = qr.make_image(fill_color="black", back_color="white")
 
-        path = os.path.join(OUT_DIR, f"card_{card_id}.png")
-        img.save(path)
+        filename = f"card_{card_id}.png"
+        img.save(os.path.join(OUT_DIR, filename))
+        rows.append((card_id, filename, url))
+
+    csv_path = os.path.join(OUT_DIR, "card_urls_for_supplier.csv")
+    with open(csv_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(["card_id", "png_file", "url"])
+        writer.writerows(rows)
 
     print(f"Done. {NUM_CARDS} QR codes written to ./{OUT_DIR}/")
+    print(f"Supplier sheet: ./{OUT_DIR}/card_urls_for_supplier.csv")
     print(f"Each encodes: {base_url()}?id=NNN")
 
 
