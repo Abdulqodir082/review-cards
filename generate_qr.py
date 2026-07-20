@@ -24,7 +24,7 @@ import qrcode
 # ---------------------------------------------------------------------------
 GITHUB_USER = "Abdulqodir082"  # GitHub username that owns the Pages site
 GITHUB_REPO = "review-cards"  # the repo you deploy to GitHub Pages
-NUM_CARDS   = 100             # how many cards to generate
+NUM_CARDS   = 200             # how many cards to generate
 START_AT    = 1               # first card number
 # ---------------------------------------------------------------------------
 
