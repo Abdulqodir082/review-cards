@@ -34,6 +34,10 @@
     .toolbar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
     .toolbar button{flex:1;min-width:120px}
     code{background:#eceef1;padding:1px 5px;border-radius:4px;font-size:12px}
+    .toast{position:fixed;left:50%;top:64px;transform:translateX(-50%) translateY(-14px);z-index:50;max-width:92%;width:520px;padding:13px 16px;border-radius:11px;font-size:14px;font-weight:600;box-shadow:0 6px 24px rgba(0,0,0,.18);opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;text-align:center}
+    .toast.show{opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(0)}
+    .toast.ok{background:#0a7d33;color:#fff}
+    .toast.err{background:#b4232a;color:#fff}
   </style>
 </head>
 <body>
@@ -41,6 +45,8 @@
   <h1>Review Cards</h1>
   <span class="status" id="status">Not connected</span>
 </header>
+
+<div id="toast" class="toast" onclick="this.classList.remove('show')"></div>
 
 <main>
   <div class="panel">
@@ -109,6 +115,23 @@ function b64decode(str){ return decodeURIComponent(escape(atob(str))); }
 
 function show(el, ok, text){ el.className = 'msg ' + (ok ? 'ok' : 'err'); el.textContent = text; }
 
+let toastTimer = null;
+function toast(ok, text){
+  const t = $('toast');
+  t.className = 'toast show ' + (ok ? 'ok' : 'err');
+  t.textContent = text;
+  clearTimeout(toastTimer);
+  if(ok) toastTimer = setTimeout(() => t.classList.remove('show'), 4000);
+}
+
+// Pull GitHub's own error explanation out of a failed response.
+async function ghError(r){
+  try {
+    const j = await r.json();
+    return j.message ? (j.message + (j.errors ? ' — ' + JSON.stringify(j.errors) : '')) : ('HTTP ' + r.status);
+  } catch(e){ return 'HTTP ' + r.status; }
+}
+
 function nextId(map){
   let max = 0;
   Object.keys(map).forEach(k => { const n = parseInt(k, 10); if(!isNaN(n) && n > max) max = n; });
@@ -149,9 +172,9 @@ async function load(){
   $('load').disabled = true;
   try {
     const r = await gh(apiBase + '?ref=' + encodeURIComponent(branch) + '&t=' + Date.now(), { cache: 'no-store' });
-    if(r.status === 404){ show($('cfgmsg'), false, 'mapping.json not found in that repo/branch.'); return; }
-    if(r.status === 401 || r.status === 403){ show($('cfgmsg'), false, 'Token rejected (' + r.status + '). Check it has Contents: Read & write on this repo.'); return; }
-    if(!r.ok){ show($('cfgmsg'), false, 'GitHub error ' + r.status + '.'); return; }
+    if(r.status === 404){ const m='mapping.json not found in that repo/branch.'; show($('cfgmsg'), false, m); toast(false, m); return; }
+    if(r.status === 401 || r.status === 403){ const m='Token rejected ('+r.status+'). It needs Contents: Read & write on this repo.'; show($('cfgmsg'), false, m); toast(false, m); return; }
+    if(!r.ok){ const m=await ghError(r); show($('cfgmsg'), false, m); toast(false, m); return; }
     const data = await r.json();
     sha = data.sha;
     const map = JSON.parse(b64decode(data.content));
@@ -161,8 +184,10 @@ async function load(){
     $('editor').style.display = 'block';
     $('status').textContent = 'Connected · ' + Object.keys(cards).length + ' cards';
     show($('cfgmsg'), true, 'Loaded ' + Object.keys(cards).length + ' cards.');
+    toast(true, '✓ Loaded ' + Object.keys(cards).length + ' cards. Edit a URL, then Save changes.');
   } catch(e){
     show($('cfgmsg'), false, 'Network error: ' + e.message);
+    toast(false, 'Network error: ' + e.message);
   } finally {
     $('load').disabled = false;
   }
@@ -174,9 +199,11 @@ async function save(){
   for(const id in cards){
     if(cards[id] && !/^https?:\/\//i.test(cards[id])){ show($('savemsg'), false, 'Card ' + id + ': URL must start with http:// or https://'); return; }
   }
+  if(!sha){ toast(false, 'Not loaded yet — tap “Connect & load cards” first, then edit and save.'); return; }
   const out = { config: config, cards: cards };
   const branch = $('branch').value.trim();
   $('save').disabled = true;
+  toast(true, 'Saving…');
   try {
     const body = {
       message: 'Update card mapping via admin',
@@ -185,12 +212,19 @@ async function save(){
       branch: branch
     };
     const r = await gh(apiBase, { method: 'PUT', body: JSON.stringify(body) });
-    if(r.status === 409){ show($('savemsg'), false, 'Someone else changed the file. Tap Connect & load again, then redo your edit.'); return; }
-    if(!r.ok){ show($('savemsg'), false, 'Save failed (' + r.status + ').'); return; }
+    if(r.status === 409){ toast(false, 'File changed on GitHub since you loaded it. Tap “Connect & load cards” again, redo your edit, then Save.'); show($('savemsg'), false, 'Conflict (409).'); return; }
+    if(!r.ok){
+      const reason = await ghError(r);
+      const msg = 'Save failed (' + r.status + '): ' + reason;
+      toast(false, msg); show($('savemsg'), false, msg);
+      return;
+    }
     const data = await r.json();
     sha = data.content.sha;   // update sha for the next save
+    toast(true, '✓ Saved. Live cards update within a minute.');
     show($('savemsg'), true, 'Saved. Live cards will use the new links shortly.');
   } catch(e){
+    toast(false, 'Network error: ' + e.message);
     show($('savemsg'), false, 'Network error: ' + e.message);
   } finally {
     $('save').disabled = false;
