@@ -12,6 +12,13 @@
     @keyframes s{to{transform:rotate(360deg)}}
     a{color:#0a58ca}
     .err{max-width:420px;text-align:center;padding:0 20px}
+    /* Debug page for unassigned cards */
+    .debug{background:#111;color:#f5f5f5}
+    .debug .wrap{color:#f5f5f5;gap:18px;padding:0 24px;text-align:center}
+    .card-num{font-size:clamp(40px,14vw,88px);font-weight:700;letter-spacing:1px;margin:0}
+    .card-sub{font-size:clamp(15px,4.5vw,20px);color:#b0b0b0;margin:0;max-width:420px}
+    .tg-link{margin-top:10px;font-size:15px;color:#8ab4ff}
+    .tg-link a{color:#8ab4ff}
   </style>
 </head>
 <body>
@@ -28,6 +35,25 @@
         document.getElementById('spin').style.display = 'none';
         document.getElementById('msg').innerHTML =
           '<div class="err">' + text + '</div>';
+      }
+
+      function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, function (c) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+      }
+
+      // Debug page shown for cards that are not yet assigned to a business.
+      function showUnassigned(cardId) {
+        document.title = 'Card #' + cardId;
+        document.body.className = 'debug';
+        document.body.innerHTML =
+          '<div class="wrap">' +
+            '<h1 class="card-num">Card #' + escapeHtml(cardId) + '</h1>' +
+            '<p class="card-sub">This card is not yet assigned to a business.</p>' +
+            '<p class="tg-link">Not assigned yet? Message us: ' +
+              '<a href="https://t.me/otvizcards">https://t.me/otvizcards</a></p>' +
+          '</div>';
       }
 
       if (!id) {
@@ -47,6 +73,10 @@
           var dest = cards[id] || fallback;
           if (!dest) {
             fail('Card <b>' + id + '</b> is not assigned yet, and no default destination is set.');
+            return;
+          }
+          if (dest === 'UNASSIGNED') {
+            showUnassigned(id);
             return;
           }
           location.replace(dest);

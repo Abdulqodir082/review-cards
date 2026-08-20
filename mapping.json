@@ -1,7 +1,7 @@
 {
   "config": {
     "_note": "Cards fall back to default_destination when not individually assigned.",
-    "default_destination": "https://t.me/otvizcards"
+    "default_destination": "UNASSIGNED"
   },
   "cards": {
     "100": "https://www.google.com/search?client=ms-android-samsung-ss&hs=yoTq&sca_esv=6aa6f5dc69016758&cs=1&sxsrf=APpeQnusl9ci3QWvLvuG-mxsLegGi-ozQA:1787226660193&q=axmad+golden+chicken+tashkent+reviews&sa=X&ved=2ahUKEwjP9dmRkq-WAxU28wIHHbOjLxIQ7xYoAHoECAwQAQ&biw=384&bih=797&dpr=2.81#ebo=2",
