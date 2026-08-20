@@ -38,6 +38,15 @@
     .toast.show{opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(0)}
     .toast.ok{background:#0a7d33;color:#fff}
     .toast.err{background:#b4232a;color:#fff}
+    /* QR scanner */
+    .scanwrap{position:fixed;inset:0;z-index:100;background:#000;display:none;flex-direction:column;align-items:center;justify-content:center}
+    .scanwrap.show{display:flex}
+    .scanwrap video{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+    .scanframe{position:relative;z-index:2;width:min(72vw,300px);aspect-ratio:1;border:3px solid rgba(255,255,255,.9);border-radius:16px;box-shadow:0 0 0 9999px rgba(0,0,0,.45)}
+    .scanbar{position:relative;z-index:2;margin-top:22px;color:#fff;font-size:14px;text-align:center;padding:0 24px;min-height:20px;max-width:340px}
+    .scanbar.err{color:#ffb4b4}
+    .scanclose{position:absolute;top:14px;right:14px;z-index:3;background:rgba(0,0,0,.5);color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:9px;padding:9px 14px;font-size:15px}
+    .cardrow.flash{background:#fff8c5;border-radius:8px;box-shadow:0 0 0 2px #f2cc0c;transition:background .3s,box-shadow .3s}
   </style>
 </head>
 <body>
@@ -82,6 +91,7 @@
 
   <div class="panel" id="editor" style="display:none">
     <div class="toolbar">
+      <button id="scan">📷 Scan Card</button>
       <button class="secondary" id="add">+ Add card</button>
       <button id="save">Save changes</button>
     </div>
@@ -94,6 +104,14 @@
   </div>
 </main>
 
+<div class="scanwrap" id="scanwrap">
+  <video id="scanvideo" playsinline muted></video>
+  <button class="scanclose" id="scanclose">✕ Close</button>
+  <div class="scanframe"></div>
+  <div class="scanbar" id="scanbar">Point the camera at a card’s QR code…</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jsqr"></script>
 <script>
 const $ = id => document.getElementById(id);
 let sha = null;          // current mapping.json sha, needed to commit
@@ -246,6 +264,108 @@ function loadCfg(){
     if(cfg.token) $('token').value = cfg.token;
   } catch(e){}
 }
+
+// ---- QR card scanner ----------------------------------------------------
+// Physical cards can carry an id that differs from the number printed on them.
+// Scanning the QR reveals the card's TRUE id so the right row can be edited.
+let scanStream = null, scanRAF = null;
+const scanCanvas = document.createElement('canvas');
+const scanCtx = scanCanvas.getContext('2d', { willReadFrequently: true });
+
+// Pull the id out of a scanned URL, but only if it's one of OUR card links:
+// https://<user>.github.io/review-cards/r.html?id=XXX
+function ourCardId(text){
+  let u;
+  try { u = new URL(String(text).trim()); } catch(e){ return null; }
+  if(!/\.github\.io$/i.test(u.hostname)) return null;
+  if(!/\/review-cards\/r\.html$/i.test(u.pathname)) return null;
+  const id = u.searchParams.get('id');
+  return id ? id.trim() : null;
+}
+
+function findRow(id){
+  const rows = [...document.querySelectorAll('.cardrow')];
+  let row = rows.find(r => r.dataset.id === id);
+  if(!row){
+    const n = parseInt(id, 10);
+    if(!isNaN(n)) row = rows.find(r => parseInt(r.dataset.id, 10) === n);
+  }
+  return row || null;
+}
+
+function highlightRow(row){
+  document.querySelectorAll('.cardrow.flash').forEach(r => r.classList.remove('flash'));
+  row.classList.add('flash');
+  row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  const dest = row.querySelector('.dest');
+  if(dest) dest.focus({ preventScroll: true });
+}
+
+function setScanMsg(text, isErr){
+  const b = $('scanbar');
+  b.textContent = text;
+  b.className = 'scanbar' + (isErr ? ' err' : '');
+}
+
+function stopScan(){
+  if(scanRAF){ cancelAnimationFrame(scanRAF); scanRAF = null; }
+  if(scanStream){ scanStream.getTracks().forEach(t => t.stop()); scanStream = null; }
+  $('scanvideo').srcObject = null;
+  $('scanwrap').classList.remove('show');
+}
+
+async function startScan(){
+  if(typeof jsQR === 'undefined'){ toast(false, 'QR library failed to load. Check your connection and retry.'); return; }
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    toast(false, 'Camera not available in this browser.'); return;
+  }
+  setScanMsg('Point the camera at a card’s QR code…', false);
+  $('scanwrap').classList.add('show');
+  try {
+    scanStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' } }, audio: false
+    });
+  } catch(e){
+    stopScan();
+    toast(false, 'Camera permission denied or unavailable.');
+    return;
+  }
+  const video = $('scanvideo');
+  video.srcObject = scanStream;
+  await video.play().catch(() => {});
+  scanRAF = requestAnimationFrame(tick);
+}
+
+function tick(){
+  const video = $('scanvideo');
+  if(video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth){
+    scanCanvas.width = video.videoWidth;
+    scanCanvas.height = video.videoHeight;
+    scanCtx.drawImage(video, 0, 0, scanCanvas.width, scanCanvas.height);
+    const img = scanCtx.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
+    const code = jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
+    if(code && code.data){
+      const id = ourCardId(code.data);
+      if(id){
+        const row = findRow(id);
+        stopScan();
+        if(row){
+          highlightRow(row);
+          toast(true, '✓ Scanned card #' + id + ' — highlighted below.');
+        } else {
+          toast(false, 'Scanned card #' + id + ', but it isn’t in the loaded list. Connect & load cards, then try again.');
+        }
+        return;
+      }
+      // A QR was read, but it isn't one of our card URLs.
+      setScanMsg('This doesn’t look like one of our cards.', true);
+    }
+  }
+  scanRAF = requestAnimationFrame(tick);
+}
+
+$('scan').onclick = startScan;
+$('scanclose').onclick = stopScan;
 
 $('load').onclick = () => { saveCfg(false); load(); };
 $('save').onclick = save;
