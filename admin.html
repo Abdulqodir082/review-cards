@@ -4,6 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>Review Cards — Admin</title>
   <style>
     :root{--bg:#f5f6f8;--card:#fff;--line:#e2e5ea;--fg:#1c1e21;--muted:#6b7280;--accent:#0a58ca;--ok:#0a7d33;--warn:#b4232a}
@@ -219,6 +222,7 @@ async function save(){
   const out = { config: config, cards: cards };
   const branch = $('branch').value.trim();
   $('save').disabled = true;
+  $('save').textContent = 'Saving…';   // in-place feedback, right at the button
   toast(true, 'Saving…');
   try {
     const body = {
@@ -239,11 +243,14 @@ async function save(){
     sha = data.content.sha;   // update sha for the next save
     toast(true, '✓ Saved. Live cards update within a minute.');
     show($('savemsg'), true, 'Saved. Live cards will use the new links shortly.');
+    $('save').textContent = '✓ Saved';
+    setTimeout(() => { $('save').textContent = 'Save changes'; }, 3000);
   } catch(e){
     toast(false, 'Network error: ' + e.message);
     show($('savemsg'), false, 'Network error: ' + e.message);
   } finally {
     $('save').disabled = false;
+    if($('save').textContent === 'Saving…') $('save').textContent = 'Save changes';
   }
 }
 
