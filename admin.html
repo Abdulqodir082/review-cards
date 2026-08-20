@@ -213,10 +213,8 @@ async function load(){
 
 async function save(){
   const cards = collect();
-  // basic validation
-  for(const id in cards){
-    if(cards[id] && !/^https?:\/\//i.test(cards[id])){ show($('savemsg'), false, 'Card ' + id + ': URL must start with http:// or https://'); return; }
-  }
+  // No format restriction: destinations may be full URLs (https://…),
+  // tel: links, wa.me links, or any other text the owner types.
   if(!sha){ toast(false, 'Not loaded yet — tap “Connect & load cards” first, then edit and save.'); return; }
   const out = { config: config, cards: cards };
   const branch = $('branch').value.trim();
