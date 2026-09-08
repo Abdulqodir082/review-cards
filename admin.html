@@ -40,6 +40,12 @@
     .hubbox .hf label{font-size:11px;color:var(--muted);margin:0 0 1px}
     .hubbox .hf input{font-size:14px;padding:8px 10px}
     .req{color:var(--warn)}
+    .staffhd{font:600 11px/1 Inter,sans-serif;color:var(--muted);margin:12px 0 2px}
+    .stafflist{display:flex;flex-direction:column;gap:8px}
+    .staffrow{position:relative;border:1px solid var(--line);border-radius:9px;padding:9px;display:flex;flex-direction:column;gap:6px;background:#fbfbfc}
+    .staffrow .srm{position:absolute;top:7px;right:7px;background:#eceef1;border:0;border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer;color:var(--warn)}
+    .staffrow input{font-size:14px;padding:8px 10px}
+    .addstaff{background:#eceef1;color:var(--fg);border:1px dashed #c3c8cf;border-radius:8px;padding:9px;font-size:13px;font-weight:600;cursor:pointer;margin-top:2px}
     .msg{font-size:13px;padding:10px 12px;border-radius:9px;margin-top:10px;display:none}
     .msg.ok{display:block;background:#e6f4ea;color:var(--ok)}
     .msg.err{display:block;background:#fdeaea;color:var(--warn)}
@@ -210,7 +216,11 @@ function addRow(id, value){
       '<button class="secondary del" title="Remove">✕</button>' +
     '</div>' +
     '<div class="simplebox"><input class="dest" placeholder="https://… , tel:… , etc."></div>' +
-    '<div class="hubbox">' + hubInputs + '</div>';
+    '<div class="hubbox">' + hubInputs +
+      '<div class="staffhd">Staff — each shows Call + Instagram (optional, e.g. barbers)</div>' +
+      '<div class="stafflist"></div>' +
+      '<button type="button" class="addstaff">+ Add staff member</button>' +
+    '</div>';
 
   wrap.querySelector('.cid').textContent = id;
 
@@ -218,17 +228,37 @@ function addRow(id, value){
   mode.value = isHub ? 'hub' : 'simple';
   mode.onchange = () => wrap.classList.toggle('hub', mode.value === 'hub');
 
+  const staffList = wrap.querySelector('.stafflist');
+  wrap.querySelector('.addstaff').onclick = () => makeStaffRow(staffList, {});
+
   if (isHub) {
     HUB_FIELDS.forEach(f => {
       const el = wrap.querySelector('.hub-' + f[0]);
       if (value[f[0]]) el.value = value[f[0]];
     });
+    if (Array.isArray(value.staff)) value.staff.forEach(s => makeStaffRow(staffList, s));
   } else {
     wrap.querySelector('.dest').value = (typeof value === 'string') ? value : '';
   }
 
   wrap.querySelector('.del').onclick = () => wrap.remove();
   $('rows').appendChild(wrap);
+}
+
+function makeStaffRow(container, s){
+  s = s || {};
+  const row = document.createElement('div');
+  row.className = 'staffrow';
+  row.innerHTML =
+    '<button type="button" class="srm">✕</button>' +
+    '<input class="st-name" placeholder="Name (e.g. Shuhrat)" autocapitalize="words">' +
+    '<input class="st-phone" placeholder="Phone — tel:+998901234567" autocapitalize="off" spellcheck="false">' +
+    '<input class="st-instagram" placeholder="Instagram URL" autocapitalize="off" spellcheck="false">';
+  row.querySelector('.st-name').value = s.name || '';
+  row.querySelector('.st-phone').value = s.phone || '';
+  row.querySelector('.st-instagram').value = s.instagram || '';
+  row.querySelector('.srm').onclick = () => row.remove();
+  container.appendChild(row);
 }
 
 function collect(){
@@ -241,6 +271,20 @@ function collect(){
         const v = r.querySelector('.hub-' + f[0]).value.trim();
         if (v) obj[f[0]] = v;   // omit empty optional fields
       });
+      const staff = [];
+      r.querySelectorAll('.staffrow').forEach(sr => {
+        const name = sr.querySelector('.st-name').value.trim();
+        const phone = sr.querySelector('.st-phone').value.trim();
+        const instagram = sr.querySelector('.st-instagram').value.trim();
+        if (name || phone || instagram) {
+          const o = {};
+          if (name) o.name = name;
+          if (phone) o.phone = phone;
+          if (instagram) o.instagram = instagram;
+          staff.push(o);
+        }
+      });
+      if (staff.length) obj.staff = staff;
       map[id] = obj;            // review_url validated in save()
     } else {
       map[id] = r.querySelector('.dest').value.trim();

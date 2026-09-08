@@ -38,6 +38,11 @@
     .btn svg{width:18px;height:18px;flex:none}
     .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
     .grid2 .btn{margin-bottom:0}
+    .staff{display:flex;flex-direction:column;gap:10px;margin-top:12px;text-align:left}
+    .staff-member{background:#181c21;border:1px solid var(--line);border-radius:14px;padding:12px}
+    .staff-name{font:600 14px/1 Inter,sans-serif;color:#fff;margin-bottom:9px}
+    .staff-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .staff-row .btn{margin-bottom:0;padding:12px;font-size:14px}
     .footer{margin-top:20px;font-size:11px;color:rgba(255,255,255,0.4)}
   </style>
 </head>
@@ -96,6 +101,40 @@
         return a;
       }
 
+      // Icons reused for per-staff Call / Instagram buttons.
+      var IG_ICON = SECONDARY[0][2];
+      var PHONE_ICON = SECONDARY[2][2];
+
+      // Optional per-person contacts (e.g. a barbershop's 3 barbers).
+      // h.staff = [{ name, phone, instagram }, ...]. Renders name + Call + Instagram.
+      function renderStaff(list) {
+        var wrap = document.createElement('div');
+        wrap.className = 'staff';
+        var any = false;
+        list.forEach(function (p) {
+          if (!p) return;
+          var call = makeBtn('btn-secondary', PHONE_ICON, "Qo'ng'iroq", p.phone);
+          var ig = makeBtn('btn-secondary', IG_ICON, 'Instagram', p.instagram);
+          if (!call && !ig) return;                 // nothing usable for this person
+          var m = document.createElement('div');
+          m.className = 'staff-member';
+          if (p.name) {
+            var nm = document.createElement('div');
+            nm.className = 'staff-name';
+            nm.textContent = p.name;
+            m.appendChild(nm);
+          }
+          var row = document.createElement('div');
+          row.className = 'staff-row';
+          if (call) row.appendChild(call);
+          if (ig) row.appendChild(ig);
+          m.appendChild(row);
+          wrap.appendChild(m);
+          any = true;
+        });
+        return any ? wrap : null;
+      }
+
       function renderHub(h) {
         document.title = h.business_name || 'Reviews';
 
@@ -119,6 +158,12 @@
           if (b) { grid.appendChild(b); count++; }
         });
         if (!grid.children.length) grid.remove();
+
+        // Per-staff contact blocks (barbershop etc.)
+        if (Array.isArray(h.staff) && h.staff.length) {
+          var st = renderStaff(h.staff);
+          if (st) { card.insertBefore(st, card.querySelector('.footer')); count++; }
+        }
 
         if (!count) { fail('Card <b>' + id + '</b> has no valid links yet.'); return; }
 
