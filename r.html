@@ -7,11 +7,21 @@
   <title>Redirecting…</title>
   <style>
     html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+    /* Redirect (string) view */
     .wrap{height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;color:#333}
     .spin{width:34px;height:34px;border:3px solid #ddd;border-top-color:#555;border-radius:50%;animation:s 1s linear infinite}
     @keyframes s{to{transform:rotate(360deg)}}
     a{color:#0a58ca}
     .err{max-width:420px;text-align:center;padding:0 20px}
+    /* Hub (object) view — dark, mobile-first */
+    body.hub{background:#0f1115;color:#f5f6f8}
+    .hubwrap{min-height:100%;box-sizing:border-box;display:flex;align-items:center;justify-content:center;padding:32px 18px}
+    .hubcard{width:100%;max-width:420px;display:flex;flex-direction:column;gap:12px;text-align:center}
+    .bname{font-size:24px;font-weight:800;line-height:1.25;margin:0 0 10px}
+    .hbtn{display:block;text-decoration:none;padding:16px 18px;border-radius:14px;font-size:17px;font-weight:700;line-height:1.2}
+    .hbtn.primary{background:#f5b301;color:#1a1400;box-shadow:0 6px 22px rgba(245,179,1,.28)}
+    .hbtn.sec{background:#1c2027;color:#f5f6f8;border:1px solid #2b313b}
+    .hbtn:active{transform:translateY(1px)}
   </style>
 </head>
 <body>
@@ -25,9 +35,68 @@
       var id = (params.get('id') || '').trim();
 
       function fail(text) {
-        document.getElementById('spin').style.display = 'none';
-        document.getElementById('msg').innerHTML =
-          '<div class="err">' + text + '</div>';
+        var spin = document.getElementById('spin');
+        if (spin) spin.style.display = 'none';
+        var msg = document.getElementById('msg');
+        if (msg) msg.innerHTML = '<div class="err">' + text + '</div>';
+      }
+
+      function safeHref(href) {
+        // Allow only web links and tel: — never javascript:, data:, etc.
+        return /^(https?:|tel:)/i.test(String(href).trim()) ? String(href).trim() : null;
+      }
+
+      function makeBtn(label, href, cls) {
+        var h = safeHref(href);
+        if (!h) return null;
+        var a = document.createElement('a');
+        a.className = 'hbtn ' + cls;
+        a.textContent = label;
+        a.href = h;
+        a.rel = 'noopener noreferrer';
+        if (!/^tel:/i.test(h)) a.target = '_top';
+        return a;
+      }
+
+      function renderHub(h) {
+        document.title = h.business_name || 'Reviews';
+        var card = document.createElement('div');
+        card.className = 'hubcard';
+
+        if (h.business_name) {
+          var head = document.createElement('h1');
+          head.className = 'bname';
+          head.textContent = h.business_name;
+          card.appendChild(head);
+        }
+
+        var primary = makeBtn("⭐ Google'da baho qoldiring", h.review_url, 'primary');
+        if (primary) card.appendChild(primary);
+
+        // Secondary buttons, only for fields that are present.
+        [
+          ['instagram', '📷 Instagram'],
+          ['facebook',  '👍 Facebook'],
+          ['phone',     "📞 Qo'ng'iroq qilish"],
+          ['telegram',  '✈️ Telegram']
+        ].forEach(function (pair) {
+          if (h[pair[0]]) {
+            var b = makeBtn(pair[1], h[pair[0]], 'sec');
+            if (b) card.appendChild(b);
+          }
+        });
+
+        if (!card.children.length) {
+          fail('Card <b>' + id + '</b> has no valid links yet.');
+          return;
+        }
+
+        var wrap = document.createElement('div');
+        wrap.className = 'hubwrap';
+        wrap.appendChild(card);
+        document.body.className = 'hub';
+        document.body.innerHTML = '';
+        document.body.appendChild(wrap);
       }
 
       if (!id) {
@@ -43,8 +112,18 @@
         })
         .then(function (map) {
           var cards = map.cards || {};
+          var entry = cards[id];
+
+          // Object entry → hub landing page (only "hub" supported for now).
+          if (entry && typeof entry === 'object') {
+            if (entry.type === 'hub') { renderHub(entry); return; }
+            fail('Card <b>' + id + '</b> has an unsupported configuration.');
+            return;
+          }
+
+          // String entry (or fall back to the default) → direct redirect.
           var fallback = (map.config && map.config.default_destination) || '';
-          var dest = cards[id] || fallback;
+          var dest = (typeof entry === 'string' && entry) ? entry : fallback;
           if (!dest) {
             fail('Card <b>' + id + '</b> is not assigned yet, and no default destination is set.');
             return;

@@ -26,10 +26,20 @@
     button:disabled{opacity:.5;cursor:default}
     .cfg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
     .cfg .full{grid-column:1/-1}
-    .cardrow{display:flex;gap:8px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+    .cardrow{display:flex;flex-direction:column;gap:8px;align-items:stretch;padding:12px 0;border-top:1px solid var(--line)}
     .cardrow:first-of-type{border-top:0}
+    .rowhead{display:flex;gap:8px;align-items:center}
     .cid{font-weight:700;width:44px;flex:0 0 44px}
-    .cardrow input{flex:1;font-size:14px;padding:9px 10px}
+    .cardrow input{width:100%;font-size:14px;padding:9px 10px}
+    .rowhead .mode{flex:1;font-size:14px;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:#fff}
+    .rowhead .del{flex:0 0 auto;padding:9px 11px}
+    .hubbox{display:none;flex-direction:column;gap:6px;padding:2px 0 2px 52px}
+    .cardrow.hub .hubbox{display:flex}
+    .cardrow.hub .simplebox{display:none}
+    .hubbox .hf{display:flex;flex-direction:column;gap:2px}
+    .hubbox .hf label{font-size:11px;color:var(--muted);margin:0 0 1px}
+    .hubbox .hf input{font-size:14px;padding:8px 10px}
+    .req{color:var(--warn)}
     .msg{font-size:13px;padding:10px 12px;border-radius:9px;margin-top:10px;display:none}
     .msg.ok{display:block;background:#e6f4ea;color:var(--ok)}
     .msg.err{display:block;background:#fdeaea;color:var(--warn)}
@@ -101,8 +111,10 @@
     <div id="rows"></div>
     <div class="msg" id="savemsg"></div>
     <div class="hint">
-      Each row is <code>card id → destination URL</code>. Edit a URL and tap <b>Save changes</b> to
-      commit it. Live cards update within a minute (or instantly, since the redirect page cache-busts).
+      Each row is a card. <b>Simple link</b> redirects the card straight to one URL.
+      <b>Hub page</b> shows a small landing page with a Google-review button plus optional
+      Instagram / Facebook / phone / Telegram buttons (Google review URL is required).
+      Edit, then tap <b>Save changes</b> — live cards update within a minute.
     </div>
   </div>
 </main>
@@ -165,15 +177,56 @@ function renderRows(map){
   Object.keys(map).sort().forEach(id => addRow(id, map[id]));
 }
 
-function addRow(id, url){
+// Hub fields, in display order. review_url is required (marked with *).
+const HUB_FIELDS = [
+  ['business_name', 'Business name', 'Fillet'],
+  ['review_url',    'Google review URL *', 'https://g.page/r/…/review'],
+  ['instagram',     'Instagram URL', 'https://instagram.com/handle'],
+  ['facebook',      'Facebook URL', 'https://facebook.com/handle'],
+  ['phone',         'Phone', 'tel:+998901234567'],
+  ['telegram',      'Telegram URL', 'https://t.me/handle']
+];
+
+function addRow(id, value){
+  const isHub = value && typeof value === 'object' && value.type === 'hub';
+
   const wrap = document.createElement('div');
-  wrap.className = 'cardrow';
-  wrap.innerHTML = '<span class="cid"></span>' +
-    '<input class="dest" placeholder="https://…">' +
-    '<button class="secondary del" title="Remove" style="padding:9px 11px">✕</button>';
-  wrap.querySelector('.cid').textContent = id;
+  wrap.className = 'cardrow' + (isHub ? ' hub' : '');
   wrap.dataset.id = id;
-  wrap.querySelector('.dest').value = url || '';
+
+  let hubInputs = '';
+  HUB_FIELDS.forEach(f => {
+    const star = f[0] === 'review_url' ? '<span class="req"> *</span>' : '';
+    const lbl = f[1].replace(' *', '') ;
+    hubInputs += '<div class="hf"><label>' + lbl + star + '</label>' +
+      '<input class="hub-' + f[0] + '" placeholder="' + f[2] + '" ' +
+      'autocapitalize="off" autocorrect="off" spellcheck="false"></div>';
+  });
+
+  wrap.innerHTML =
+    '<div class="rowhead">' +
+      '<span class="cid"></span>' +
+      '<select class="mode"><option value="simple">Simple link</option><option value="hub">Hub page</option></select>' +
+      '<button class="secondary del" title="Remove">✕</button>' +
+    '</div>' +
+    '<div class="simplebox"><input class="dest" placeholder="https://… , tel:… , etc."></div>' +
+    '<div class="hubbox">' + hubInputs + '</div>';
+
+  wrap.querySelector('.cid').textContent = id;
+
+  const mode = wrap.querySelector('.mode');
+  mode.value = isHub ? 'hub' : 'simple';
+  mode.onchange = () => wrap.classList.toggle('hub', mode.value === 'hub');
+
+  if (isHub) {
+    HUB_FIELDS.forEach(f => {
+      const el = wrap.querySelector('.hub-' + f[0]);
+      if (value[f[0]]) el.value = value[f[0]];
+    });
+  } else {
+    wrap.querySelector('.dest').value = (typeof value === 'string') ? value : '';
+  }
+
   wrap.querySelector('.del').onclick = () => wrap.remove();
   $('rows').appendChild(wrap);
 }
@@ -181,9 +234,29 @@ function addRow(id, url){
 function collect(){
   const map = {};
   document.querySelectorAll('.cardrow').forEach(r => {
-    map[r.dataset.id] = r.querySelector('.dest').value.trim();
+    const id = r.dataset.id;
+    if (r.querySelector('.mode').value === 'hub') {
+      const obj = { type: 'hub' };
+      HUB_FIELDS.forEach(f => {
+        const v = r.querySelector('.hub-' + f[0]).value.trim();
+        if (v) obj[f[0]] = v;   // omit empty optional fields
+      });
+      map[id] = obj;            // review_url validated in save()
+    } else {
+      map[id] = r.querySelector('.dest').value.trim();
+    }
   });
   return map;
+}
+
+// Returns a human message if any hub row is missing its required review_url.
+function validateHubs(map){
+  const bad = [];
+  Object.keys(map).forEach(id => {
+    const v = map[id];
+    if (v && typeof v === 'object' && v.type === 'hub' && !v.review_url) bad.push(id);
+  });
+  return bad.length ? ('Hub card(s) missing required Google review URL: ' + bad.join(', ')) : null;
 }
 
 async function load(){
@@ -216,8 +289,10 @@ async function load(){
 
 async function save(){
   const cards = collect();
-  // No format restriction: destinations may be full URLs (https://…),
+  // No format restriction on simple links: they may be full URLs (https://…),
   // tel: links, wa.me links, or any other text the owner types.
+  const hubErr = validateHubs(cards);
+  if(hubErr){ toast(false, hubErr); show($('savemsg'), false, hubErr); return; }
   if(!sha){ toast(false, 'Not loaded yet — tap “Connect & load cards” first, then edit and save.'); return; }
   const out = { config: config, cards: cards };
   const branch = $('branch').value.trim();
@@ -302,8 +377,10 @@ function highlightRow(row){
   document.querySelectorAll('.cardrow.flash').forEach(r => r.classList.remove('flash'));
   row.classList.add('flash');
   row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  const dest = row.querySelector('.dest');
-  if(dest) dest.focus({ preventScroll: true });
+  const focusEl = row.classList.contains('hub')
+    ? row.querySelector('.hub-review_url')
+    : row.querySelector('.dest');
+  if(focusEl) focusEl.focus({ preventScroll: true });
 }
 
 function setScanMsg(text, isErr){
