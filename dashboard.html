@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Otvizcards Analytics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --teal:#0F9D8F; --deep:#0B6F66; --ink:#14171A; --canvas:#F4F6F5; --star:#F5B400;
+    --line:#E4E8E7; --line2:#DFE4E2; --muted:#6B7A77; --muted2:#9AA6A3;
+    --activeBg:#E4F5F2; --rowline:#EFF2F1;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--canvas);color:var(--ink);font-family:'Inter',system-ui,-apple-system,sans-serif}
+  a{color:inherit;text-decoration:none}
+  .app{display:flex;min-height:100vh}
+  /* Sidebar */
+  .side{width:214px;background:#fff;border-right:1px solid var(--line);padding:20px 14px;flex:none}
+  .brand{display:flex;align-items:center;gap:7px;margin:2px 0 24px 8px}
+  .brand span{font:600 18px/1 Poppins,sans-serif;letter-spacing:-.3px}
+  .navsec{font:600 9.5px/1 Poppins,sans-serif;letter-spacing:1.4px;color:var(--muted2);padding:0 8px;margin-bottom:10px}
+  .nav{display:flex;flex-direction:column;gap:2px;margin-bottom:22px}
+  .navitem{display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;font:500 13px/1 Inter,sans-serif;color:#4A5754}
+  .navitem .dot{width:15px;height:15px;border-radius:4px;border:1.5px solid var(--muted2)}
+  .navitem.active{background:var(--activeBg);color:var(--deep);font-weight:600}
+  .navitem.active .dot{border-color:var(--deep)}
+  .navitem .count{margin-left:auto;font:600 10.5px/1 Inter,sans-serif;color:var(--muted2)}
+  /* Main */
+  .main{flex:1;min-width:0}
+  .topbar{height:60px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;padding:0 22px}
+  .topbar h1{font:700 15px/1 Poppins,sans-serif;margin:0}
+  .seg{display:flex;gap:3px;background:var(--canvas);border-radius:8px;padding:3px;border:1px solid var(--line)}
+  .seg button{padding:6px 11px;border:0;background:none;border-radius:6px;font:500 11.5px/1 Inter,sans-serif;color:var(--muted);cursor:pointer}
+  .seg button.on{background:#fff;border:1px solid var(--line);font-weight:600;color:var(--ink)}
+  .btn{border:1px solid var(--line2);background:#fff;border-radius:8px;padding:8px 12px;font:600 12px/1 Inter,sans-serif;color:var(--ink);cursor:pointer}
+  .btn.primary{background:var(--teal);border-color:var(--teal);color:#062E28}
+  .spacer{flex:1}
+  /* KPI tiles */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:20px 22px 0}
+  .tile{background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px}
+  .tile .k{font:600 10.5px/1 Inter,sans-serif;letter-spacing:.8px;color:var(--muted2);margin-bottom:10px;text-transform:uppercase}
+  .tile .v{font:700 30px/1 Poppins,sans-serif;letter-spacing:-1px}
+  .tile .d{font:600 11.5px/1 Inter,sans-serif;color:var(--deep);margin-top:8px}
+  .tile .d.flat{color:var(--muted);font-weight:500}
+  /* Content grid */
+  .grid{display:grid;grid-template-columns:1fr 336px;gap:14px;padding:14px 22px 0}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:10px;padding:18px}
+  .panel h2{font:700 14px/1 Poppins,sans-serif;margin:0}
+  .chart-head{display:flex;align-items:baseline;gap:12px;margin-bottom:6px}
+  .chart-head .sub{font:400 11.5px/1 Inter,sans-serif;color:var(--muted)}
+  .legend{margin-left:auto;display:flex;gap:14px;font:600 11px/1 Inter,sans-serif;color:var(--deep)}
+  .empty{padding:34px 18px;text-align:center;color:var(--muted);font:500 13px/1.5 Inter,sans-serif}
+  .empty b{color:var(--ink)}
+  /* Logger */
+  .lbl{font:600 10px/1 Inter,sans-serif;letter-spacing:1.2px;color:var(--muted2);margin-bottom:6px}
+  .field{width:100%;background:#fff;border:1px solid var(--line2);border-radius:8px;padding:10px 12px;font:500 12.5px/1 Inter,sans-serif;color:var(--ink)}
+  select.field{appearance:none}
+  .field.focus{border-color:var(--teal)}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+  .save{background:var(--teal);border:0;border-radius:8px;padding:11px;width:100%;text-align:center;font:600 12.5px/1 Inter,sans-serif;color:#062E28;cursor:pointer}
+  .save:disabled{opacity:.5;cursor:default}
+  .msg{font:500 11.5px/1.4 Inter,sans-serif;margin-top:10px;display:none;padding:9px 11px;border-radius:8px}
+  .msg.ok{display:block;background:#E4F5F2;color:var(--deep)}
+  .msg.err{display:block;background:#FBE9E7;color:#A8342A}
+  .recent{border-top:1px solid var(--rowline);padding-top:14px;margin-top:16px}
+  .recent .row{display:flex;justify-content:space-between;font:500 12px/1 Inter,sans-serif;color:#4A5754;padding:4px 0}
+  .recent .row b{color:var(--ink);font-weight:600}
+  .up{color:var(--deep);font-weight:600}
+  /* Table */
+  .tablewrap{padding:14px 22px 26px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .card-hd{display:flex;align-items:center;padding:14px 16px 12px;gap:12px}
+  .card-hd h2{font:700 14px/1 Poppins,sans-serif;margin:0}
+  .card-hd .sub{font:400 11.5px/1 Inter,sans-serif;color:var(--muted)}
+  table{width:100%;border-collapse:collapse}
+  thead th{font:600 10px/1 Inter,sans-serif;letter-spacing:.9px;color:var(--muted2);text-align:left;padding:10px 16px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  thead th.r{text-align:right}
+  tbody td{padding:12px 16px;border-bottom:1px solid var(--rowline);font:500 12.5px/1 Inter,sans-serif;vertical-align:middle}
+  tbody td.r{text-align:right}
+  .biz{font:600 13px/1.2 Inter,sans-serif}
+  .metasm{font:400 11px/1.3 Inter,sans-serif;color:var(--muted2);margin-top:2px}
+  .bar{display:flex;align-items:center;gap:8px;min-width:120px}
+  .bar .track{flex:1;height:5px;border-radius:3px;background:var(--rowline);overflow:hidden}
+  .bar .fill{height:5px;border-radius:3px;background:var(--teal)}
+  .bar .pct{font:600 11.5px/1 Inter,sans-serif;color:var(--deep);width:46px;text-align:right}
+  .badge{display:inline-block;padding:4px 8px;border-radius:5px;font:600 10.5px/1 Inter,sans-serif}
+  .badge.paid{background:var(--activeBg);color:var(--deep)}
+  .badge.trial{background:#FDF3DE;color:#96690A}
+  .badge.expired{background:#FBE9E7;color:#A8342A}
+  .badge.none{background:#F0F2F1;color:var(--muted2)}
+  .loading{padding:60px;text-align:center;color:var(--muted2);font:500 13px/1 Inter,sans-serif}
+  @media(max-width:900px){
+    .side{display:none} .kpis{grid-template-columns:1fr 1fr} .grid{grid-template-columns:1fr}
+    .topbar{flex-wrap:wrap;height:auto;padding:12px}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="side">
+    <div class="brand">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 1.6l3.1 6.4 7 1-5 4.9 1.2 7-6.3-3.3-6.3 3.3 1.2-7-5-4.9 7-1z" fill="#0F9D8F"/><circle cx="12" cy="11.2" r="2.6" fill="#fff"/></svg>
+      <span>tvizcards</span>
+    </div>
+    <div class="navsec">MANAGE</div>
+    <nav class="nav">
+      <a class="navitem" href="admin.html"><span class="dot"></span>Cards<span class="count" id="navCards">—</span></a>
+      <a class="navitem"><span class="dot"></span>Businesses<span class="count" id="navBiz">—</span></a>
+      <a class="navitem active"><span class="dot"></span>Analytics</a>
+      <a class="navitem"><span class="dot"></span>Batches</a>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <h1>Analytics</h1>
+      <div class="spacer"></div>
+      <div class="seg" id="rangeSeg">
+        <button data-r="30">30d</button>
+        <button data-r="90" class="on">90d</button>
+        <button data-r="365">12m</button>
+        <button data-r="all">All</button>
+      </div>
+      <button class="btn" id="exportBtn">Export CSV</button>
+    </div>
+
+    <!-- KPI tiles -->
+    <div class="kpis" id="kpis">
+      <div class="tile"><div class="k" id="k1label">New reviews</div><div class="v" id="k1">—</div><div class="d flat" id="k1d">&nbsp;</div></div>
+      <div class="tile"><div class="k">Total reviews</div><div class="v" id="k2">—</div><div class="d flat" id="k2d">&nbsp;</div></div>
+      <div class="tile"><div class="k">Avg rating</div><div class="v" id="k3">—</div><div class="d flat" id="k3d">&nbsp;</div></div>
+      <div class="tile"><div class="k">Businesses tracked</div><div class="v" id="k4">—</div><div class="d flat" id="k4d">&nbsp;</div></div>
+    </div>
+
+    <!-- Chart + logger -->
+    <div class="grid">
+      <div class="panel">
+        <div class="chart-head">
+          <h2>Cumulative reviews</h2>
+          <div class="sub" id="chartSub">All businesses</div>
+          <div class="legend"><span>● Total reviews</span></div>
+        </div>
+        <div id="chartArea"><div class="empty">Loading…</div></div>
+      </div>
+
+      <div class="panel">
+        <h2>Log a review count</h2>
+        <div class="sub" style="font:400 11.5px/1.4 Inter,sans-serif;color:var(--muted);margin:3px 0 16px">Manual snapshot — enter what Google shows today. Commits to <code>tracking-history.json</code>.</div>
+
+        <div class="lbl">BUSINESS</div>
+        <select class="field" id="logBiz" style="margin-bottom:12px"></select>
+
+        <div class="two">
+          <div><div class="lbl">DATE</div><input class="field" id="logDate" type="date"></div>
+          <div><div class="lbl">TOTAL REVIEWS</div><input class="field" id="logCount" type="number" min="0" placeholder="341"></div>
+        </div>
+        <div class="two">
+          <div><div class="lbl">AVG RATING</div><input class="field" id="logRating" type="number" min="0" max="5" step="0.1" placeholder="4.9"></div>
+          <div><div class="lbl">GITHUB TOKEN</div><input class="field" id="logToken" type="password" placeholder="github_pat_…" autocomplete="off"></div>
+        </div>
+
+        <button class="save" id="logSave">Save snapshot</button>
+        <div class="msg" id="logMsg"></div>
+
+        <div class="recent">
+          <div class="lbl">RECENT ENTRIES</div>
+          <div id="recentList"><div style="font:400 11.5px/1 Inter,sans-serif;color:var(--muted2)">—</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- By business table -->
+    <div class="tablewrap">
+      <div class="card">
+        <div class="card-hd">
+          <h2>By business</h2>
+          <div class="sub">before / after first snapshot, sorted by growth</div>
+        </div>
+        <div id="tableArea"><div class="loading">Loading…</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const OWNER = 'Abdulqodir082', REPO = 'review-cards', BRANCH = 'main';
+let HISTORY = [];      // all snapshot records
+let BUSINESSES = [];   // from tracking/businesses.json (name, card_id, place_id, plan)
+let range = '90';      // '30' | '90' | '365' | 'all'
+
+const nf = new Intl.NumberFormat('en-US');
+function fmt(n){ return (n==null || isNaN(n)) ? '—' : nf.format(n); }
+function ymd(d){ return d.toISOString().slice(0,10); }
+
+async function loadData(){
+  const bust = '?t=' + Date.now();
+  const [hRes, bRes] = await Promise.all([
+    fetch('tracking-history.json' + bust, {cache:'no-store'}),
+    fetch('tracking/businesses.json' + bust, {cache:'no-store'}).catch(()=>null)
+  ]);
+  HISTORY = hRes.ok ? await hRes.json() : [];
+  if(!Array.isArray(HISTORY)) HISTORY = [];
+  try { const b = bRes && bRes.ok ? await bRes.json() : null; BUSINESSES = (b && b.businesses) || []; }
+  catch(e){ BUSINESSES = []; }
+}
+
+// Group records by business (keyed by card_id), sorted by date ascending.
+function groupByBusiness(records){
+  const map = new Map();
+  for(const r of records){
+    const key = r.card_id || r.business_name;
+    if(!map.has(key)) map.set(key, { card_id:r.card_id, name:r.business_name, place_id:r.place_id, snaps:[] });
+    const g = map.get(key);
+    g.name = r.business_name || g.name;
+    g.snaps.push(r);
+  }
+  for(const g of map.values()) g.snaps.sort((a,b)=> a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+  return [...map.values()];
+}
+
+function cutoffDate(){
+  if(range === 'all') return null;
+  const d = new Date(); d.setDate(d.getDate() - parseInt(range,10)); return ymd(d);
+}
+
+function planFor(card_id){
+  const b = BUSINESSES.find(x => x.card_id === card_id);
+  const p = (b && b.plan || '').toLowerCase();
+  if(p === 'paid' || p === 'active') return {cls:'paid', label:'Paid'};
+  if(p === 'trial') return {cls:'trial', label:'Trial'};
+  if(p === 'expired') return {cls:'expired', label:'Expired'};
+  return {cls:'none', label:'—'};
+}
+
+function compute(){
+  const groups = groupByBusiness(HISTORY);
+  const cut = cutoffDate();
+
+  let totalReviews = 0, newInRange = 0, ratingSum = 0, ratingN = 0;
+  const rows = [];
+
+  for(const g of groups){
+    if(!g.snaps.length) continue;
+    const first = g.snaps[0];
+    const last = g.snaps[g.snaps.length - 1];
+    const before = first.review_count ?? 0;
+    const after = last.review_count ?? 0;
+    if(typeof after === 'number') totalReviews += after;
+    if(typeof last.rating === 'number'){ ratingSum += last.rating; ratingN++; }
+
+    // within-range delta: baseline = last snapshot before the cutoff, else first snapshot
+    let baseline = before;
+    if(cut){
+      const prior = g.snaps.filter(s => s.date < cut);
+      const inRange = g.snaps.filter(s => s.date >= cut);
+      if(!inRange.length) baseline = after;              // no activity in range
+      else baseline = prior.length ? prior[prior.length-1].review_count : inRange[0].review_count;
+    }
+    newInRange += Math.max(0, after - (baseline ?? 0));
+
+    rows.push({
+      card_id: g.card_id, name: g.name,
+      before, after, growth: after - before,
+      rating: last.rating, lastDate: last.date, snaps: g.snaps.length,
+      plan: planFor(g.card_id)
+    });
+  }
+
+  rows.sort((a,b)=> b.growth - a.growth);
+  const avgRating = ratingN ? (ratingSum/ratingN) : null;
+  return { groups, rows, totalReviews, newInRange, avgRating, businesses: groups.length };
+}
+
+// Cumulative total reviews across all businesses over time (carry-forward per business).
+function seriesCumulative(){
+  const cut = cutoffDate();
+  const dates = [...new Set(HISTORY.map(r=>r.date))].sort();
+  const inWindow = cut ? dates.filter(d=>d>=cut) : dates;
+  const groups = groupByBusiness(HISTORY);
+  const points = [];
+  for(const d of inWindow){
+    let total = 0;
+    for(const g of groups){
+      // latest snapshot on or before d
+      let v = null;
+      for(const s of g.snaps){ if(s.date <= d && typeof s.review_count==='number') v = s.review_count; }
+      if(v!=null) total += v;
+    }
+    points.push({ date:d, total });
+  }
+  return points;
+}
+
+function renderKPIs(c){
+  const rangeLabel = range==='all' ? 'all time' : (range==='365'?'12m':range+'d');
+  $('k1label').textContent = 'New reviews · ' + rangeLabel;
+  $('k1').textContent = c.newInRange ? '+' + fmt(c.newInRange) : '0';
+  $('k2').textContent = fmt(c.totalReviews);
+  $('k3').textContent = c.avgRating!=null ? c.avgRating.toFixed(2) : '—';
+  $('k4').textContent = fmt(c.businesses);
+  $('navBiz').textContent = fmt(c.businesses);
+}
+
+function renderChart(){
+  const pts = seriesCumulative();
+  const area = $('chartArea');
+  if(pts.length < 2){
+    area.innerHTML = '<div class="empty">'+(pts.length===0
+      ? 'No snapshots yet. The daily job will fill this in, or log one on the right.'
+      : 'Only one snapshot so far — the trend line appears once there are at least two days of data.')+'</div>';
+    return;
+  }
+  const W=720, H=250, padL=40, padR=8, padT=20, padB=32;
+  const max = Math.max(...pts.map(p=>p.total)) || 1;
+  const min = 0;
+  const x = i => padL + (W-padL-padR) * (i/(pts.length-1));
+  const y = v => padT + (H-padT-padB) * (1 - (v-min)/(max-min || 1));
+  const line = pts.map((p,i)=> (i?'L':'M')+x(i).toFixed(1)+' '+y(p.total).toFixed(1)).join(' ');
+  const area2 = line + ' L'+x(pts.length-1).toFixed(1)+' '+(H-padB)+' L'+padL+' '+(H-padB)+' Z';
+  // y gridlines at 0/half/max
+  const yticks = [0, max/2, max];
+  let grid = '';
+  for(const t of yticks){ const yy=y(t).toFixed(1); grid += '<line x1="'+padL+'" y1="'+yy+'" x2="'+(W-padR)+'" y2="'+yy+'" stroke="#EFF2F1"/>'+
+    '<text x="4" y="'+(+yy+3).toFixed(1)+'" fill="#9AA6A3" font-family="Inter" font-size="10">'+fmt(Math.round(t))+'</text>'; }
+  const xLabels = '<text x="'+padL+'" y="'+(H-8)+'" fill="#9AA6A3" font-family="Inter" font-size="10">'+pts[0].date+'</text>'+
+    '<text x="'+(W-padR)+'" y="'+(H-8)+'" fill="#9AA6A3" font-family="Inter" font-size="10" text-anchor="end">'+pts[pts.length-1].date+'</text>';
+  const lastX=x(pts.length-1).toFixed(1), lastY=y(pts[pts.length-1].total).toFixed(1);
+  area.innerHTML =
+    '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:250px;display:block">'+grid+
+    '<path d="'+area2+'" fill="rgba(15,157,143,.10)"/>'+
+    '<path d="'+line+'" fill="none" stroke="#0F9D8F" stroke-width="2.4"/>'+
+    '<circle cx="'+lastX+'" cy="'+lastY+'" r="4" fill="#0F9D8F"/>'+xLabels+'</svg>';
+}
+
+function renderTable(c){
+  const area = $('tableArea');
+  if(!c.rows.length){
+    area.innerHTML = '<div class="empty">No businesses tracked yet. Add one to <b>tracking/businesses.json</b> with its Place ID, or log a manual snapshot.</div>';
+    return;
+  }
+  const maxGrowth = Math.max(1, ...c.rows.map(r=>Math.abs(r.growth)));
+  let body = '';
+  for(const r of c.rows){
+    const pct = r.before ? Math.round((r.growth/r.before)*100) : (r.growth>0?100:0);
+    const barW = Math.round((Math.abs(r.growth)/maxGrowth)*100);
+    body += '<tr>'+
+      '<td><div class="biz">'+esc(r.name||'—')+'</div><div class="metasm">'+(r.card_id?('card '+esc(r.card_id)+' · '):'')+r.snaps+' snapshot'+(r.snaps===1?'':'s')+'</div></td>'+
+      '<td class="r" style="color:var(--muted)">'+fmt(r.before)+'</td>'+
+      '<td class="r"><b>'+fmt(r.after)+'</b></td>'+
+      '<td><div class="bar"><div class="track"><div class="fill" style="width:'+barW+'%"></div></div><span class="pct">'+(r.growth>=0?'+':'')+fmt(r.growth)+'</span></div></td>'+
+      '<td class="r">'+(typeof r.rating==='number'?r.rating.toFixed(1):'—')+'</td>'+
+      '<td><span class="badge '+r.plan.cls+'">'+r.plan.label+'</span></td>'+
+      '</tr>';
+  }
+  area.innerHTML = '<table><thead><tr>'+
+    '<th>BUSINESS</th><th class="r">BEFORE</th><th class="r">AFTER</th><th>GROWTH</th><th class="r">RATING</th><th>PLAN</th>'+
+    '</tr></thead><tbody>'+body+'</tbody></table>';
+}
+
+function renderRecent(){
+  const recent = [...HISTORY].sort((a,b)=> (a.collected_at<b.collected_at?1:-1)).slice(0,6);
+  const el = $('recentList');
+  if(!recent.length){ el.innerHTML = '<div style="font:400 11.5px/1 Inter,sans-serif;color:var(--muted2)">No entries yet.</div>'; return; }
+  // growth vs the prior snapshot for the same business
+  const byBiz = groupByBusiness(HISTORY);
+  function prevCount(card_id, date){
+    const g = byBiz.find(x=>x.card_id===card_id); if(!g) return null;
+    const prior = g.snaps.filter(s=>s.date<date); return prior.length?prior[prior.length-1].review_count:null;
+  }
+  el.innerHTML = recent.map(r=>{
+    const prev = prevCount(r.card_id, r.date);
+    const delta = (prev!=null && typeof r.review_count==='number') ? r.review_count-prev : null;
+    const d = r.date ? r.date.slice(5).replace('-','.') : '';
+    return '<div class="row"><span>'+d+' · '+esc((r.business_name||'').slice(0,16))+'</span>'+
+      '<span><b>'+fmt(r.review_count)+'</b>'+(delta!=null?(' <span class="up">'+(delta>=0?'+':'')+delta+'</span>'):'')+'</span></div>';
+  }).join('');
+}
+
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function renderAll(){
+  const c = compute();
+  renderKPIs(c);
+  renderChart();
+  renderTable(c);
+  renderRecent();
+  $('chartSub').textContent = 'All businesses' + (range==='all'?'':' · last '+(range==='365'?'12 months':range+' days'));
+}
+
+// ---- Export CSV ----
+function exportCSV(){
+  const c = compute();
+  const rows = [['business','card_id','before','after','growth','growth_pct','rating','last_snapshot','plan']];
+  for(const r of c.rows){
+    const pct = r.before ? Math.round((r.growth/r.before)*100) : '';
+    rows.push([r.name, r.card_id, r.before, r.after, r.growth, pct, r.rating??'', r.lastDate, r.plan.label]);
+  }
+  const csv = rows.map(row => row.map(v=>{
+    const s = String(v==null?'':v);
+    return /[",\n]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s;
+  }).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'otvizcards-analytics-'+ymd(new Date())+'.csv';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(a.href);
+}
+
+// ---- Manual snapshot logger (commits to tracking-history.json via GitHub API) ----
+function populateLogger(){
+  const sel = $('logBiz');
+  const seen = new Set();
+  const opts = [];
+  for(const b of BUSINESSES){ if(b.card_id && !seen.has(b.card_id)){ seen.add(b.card_id); opts.push({card_id:b.card_id, name:b.name, place_id:b.place_id}); } }
+  for(const g of groupByBusiness(HISTORY)){ if(g.card_id && !seen.has(g.card_id)){ seen.add(g.card_id); opts.push({card_id:g.card_id, name:g.name, place_id:g.place_id}); } }
+  sel.innerHTML = opts.length
+    ? opts.map(o=>'<option value="'+esc(o.card_id)+'">'+esc(o.name||o.card_id)+' (card '+esc(o.card_id)+')</option>').join('')
+    : '<option value="">No businesses in businesses.json</option>';
+  $('logDate').value = ymd(new Date());
+  // restore remembered token
+  try { const t = localStorage.getItem('otvizDashToken'); if(t) $('logToken').value = t; } catch(e){}
+}
+
+function ghHeaders(token){ return { 'Authorization':'Bearer '+token, 'Accept':'application/vnd.github+json', 'X-GitHub-Api-Version':'2022-11-28' }; }
+function b64encode(str){ return btoa(unescape(encodeURIComponent(str))); }
+function logMsg(ok, text){ const m=$('logMsg'); m.className='msg '+(ok?'ok':'err'); m.textContent=text; }
+
+async function saveSnapshot(){
+  const card_id = $('logBiz').value;
+  const count = parseInt($('logCount').value, 10);
+  const rating = $('logRating').value ? parseFloat($('logRating').value) : null;
+  const date = $('logDate').value;
+  const token = $('logToken').value.trim();
+  if(!card_id){ logMsg(false,'Pick a business first.'); return; }
+  if(isNaN(count)){ logMsg(false,'Enter the total review count.'); return; }
+  if(!date){ logMsg(false,'Pick a date.'); return; }
+  if(!token){ logMsg(false,'Paste a GitHub token with Contents: Read & write.'); return; }
+  try { localStorage.setItem('otvizDashToken', token); } catch(e){}
+
+  const biz = BUSINESSES.find(b=>b.card_id===card_id) || groupByBusiness(HISTORY).find(g=>g.card_id===card_id) || {};
+  $('logSave').disabled = true; logMsg(true,'Saving…');
+  const api = 'https://api.github.com/repos/'+OWNER+'/'+REPO+'/contents/tracking-history.json';
+  try {
+    const gr = await fetch(api+'?ref='+BRANCH+'&t='+Date.now(), {headers:ghHeaders(token), cache:'no-store'});
+    if(!gr.ok){ const e=await gr.json().catch(()=>({})); logMsg(false,'Load failed ('+gr.status+'): '+(e.message||'')); $('logSave').disabled=false; return; }
+    const meta = await gr.json();
+    const arr = JSON.parse(decodeURIComponent(escape(atob(meta.content.replace(/\n/g,'')))));
+    if(arr.some(r=>r.card_id===card_id && r.date===date)){
+      logMsg(false,'A snapshot for that business and date already exists.'); $('logSave').disabled=false; return;
+    }
+    arr.push({
+      card_id, business_name: biz.name || (biz.snaps? biz.name : card_id), place_id: biz.place_id || null,
+      date, collected_at: new Date().toISOString(), rating, review_count: count, source:'manual'
+    });
+    const put = await fetch(api, { method:'PUT', headers:ghHeaders(token),
+      body: JSON.stringify({ message:'Manual review snapshot ('+date+', card '+card_id+')',
+        content: b64encode(JSON.stringify(arr, null, 2)+'\n'), sha: meta.sha, branch: BRANCH }) });
+    if(!put.ok){ const e=await put.json().catch(()=>({})); logMsg(false,'Save failed ('+put.status+'): '+(e.message||'')); $('logSave').disabled=false; return; }
+    logMsg(true,'✓ Saved. Refreshing…');
+    HISTORY = arr;
+    renderAll(); populateLogger();
+    $('logCount').value=''; $('logRating').value='';
+    setTimeout(()=>logMsg(true,'✓ Snapshot saved and committed.'), 400);
+  } catch(e){ logMsg(false,'Error: '+e.message); }
+  finally { $('logSave').disabled = false; }
+}
+
+// ---- wire up ----
+$('rangeSeg').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(!b) return;
+  range = b.dataset.r;
+  [...$('rangeSeg').children].forEach(x=>x.classList.toggle('on', x===b));
+  renderAll();
+});
+$('exportBtn').onclick = exportCSV;
+$('logSave').onclick = saveSnapshot;
+document.querySelectorAll('.field').forEach(f=>{
+  f.addEventListener('focus',()=>f.classList.add('focus'));
+  f.addEventListener('blur',()=>f.classList.remove('focus'));
+});
+
+(async function init(){
+  try {
+    await loadData();
+    populateLogger();
+    renderAll();
+    $('navCards').textContent = '—';
+  } catch(e){
+    $('chartArea').innerHTML = '<div class="empty">Could not load tracking data: '+esc(e.message)+'</div>';
+    $('tableArea').innerHTML = '';
+  }
+})();
+</script>
+</body>
+</html>
