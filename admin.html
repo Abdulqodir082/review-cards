@@ -1,502 +1,489 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="robots" content="noindex">
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta http-equiv="Pragma" content="no-cache">
-  <meta http-equiv="Expires" content="0">
-  <title>Review Cards — Admin</title>
-  <style>
-    :root{--bg:#f5f6f8;--card:#fff;--line:#e2e5ea;--fg:#1c1e21;--muted:#6b7280;--accent:#0a58ca;--ok:#0a7d33;--warn:#b4232a}
-    *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;-webkit-text-size-adjust:100%}
-    header{position:sticky;top:0;background:var(--card);border-bottom:1px solid var(--line);padding:14px 16px;display:flex;align-items:center;justify-content:space-between}
-    header h1{font-size:17px;margin:0}
-    .status{font-size:12px;color:var(--muted)}
-    main{max-width:640px;margin:0 auto;padding:16px}
-    .panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
-    label{display:block;font-size:13px;color:var(--muted);margin:0 0 6px}
-    input{width:100%;font-size:16px;padding:11px 12px;border:1px solid var(--line);border-radius:9px;background:#fff}
-    .row{display:flex;gap:8px;align-items:center}
-    .row input{flex:1}
-    button{font-size:15px;font-weight:600;padding:11px 14px;border:0;border-radius:9px;background:var(--accent);color:#fff;cursor:pointer}
-    button.secondary{background:#eceef1;color:var(--fg)}
-    button:disabled{opacity:.5;cursor:default}
-    .cfg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .cfg .full{grid-column:1/-1}
-    .cardrow{display:flex;flex-direction:column;gap:8px;align-items:stretch;padding:12px 0;border-top:1px solid var(--line)}
-    .cardrow:first-of-type{border-top:0}
-    .rowhead{display:flex;gap:8px;align-items:center}
-    .cid{font-weight:700;width:44px;flex:0 0 44px}
-    .cardrow input{width:100%;font-size:14px;padding:9px 10px}
-    .rowhead .mode{flex:1;font-size:14px;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:#fff}
-    .rowhead .del{flex:0 0 auto;padding:9px 11px}
-    .hubbox{display:none;flex-direction:column;gap:6px;padding:2px 0 2px 52px}
-    .cardrow.hub .hubbox{display:flex}
-    .cardrow.hub .simplebox{display:none}
-    .hubbox .hf{display:flex;flex-direction:column;gap:2px}
-    .hubbox .hf label{font-size:11px;color:var(--muted);margin:0 0 1px}
-    .hubbox .hf input{font-size:14px;padding:8px 10px}
-    .req{color:var(--warn)}
-    .staffhd{font:600 11px/1 Inter,sans-serif;color:var(--muted);margin:12px 0 2px}
-    .stafflist{display:flex;flex-direction:column;gap:8px}
-    .staffrow{position:relative;border:1px solid var(--line);border-radius:9px;padding:9px;display:flex;flex-direction:column;gap:6px;background:#fbfbfc}
-    .staffrow .srm{position:absolute;top:7px;right:7px;background:#eceef1;border:0;border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer;color:var(--warn)}
-    .staffrow input{font-size:14px;padding:8px 10px}
-    .addstaff{background:#eceef1;color:var(--fg);border:1px dashed #c3c8cf;border-radius:8px;padding:9px;font-size:13px;font-weight:600;cursor:pointer;margin-top:2px}
-    .msg{font-size:13px;padding:10px 12px;border-radius:9px;margin-top:10px;display:none}
-    .msg.ok{display:block;background:#e6f4ea;color:var(--ok)}
-    .msg.err{display:block;background:#fdeaea;color:var(--warn)}
-    .hint{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.45}
-    .toolbar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
-    .toolbar button{flex:1;min-width:120px}
-    code{background:#eceef1;padding:1px 5px;border-radius:4px;font-size:12px}
-    .toast{position:fixed;left:50%;top:64px;transform:translateX(-50%) translateY(-14px);z-index:50;max-width:92%;width:520px;padding:13px 16px;border-radius:11px;font-size:14px;font-weight:600;box-shadow:0 6px 24px rgba(0,0,0,.18);opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;text-align:center}
-    .toast.show{opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(0)}
-    .toast.ok{background:#0a7d33;color:#fff}
-    .toast.err{background:#b4232a;color:#fff}
-    /* QR scanner */
-    .scanwrap{position:fixed;inset:0;z-index:100;background:#000;display:none;flex-direction:column;align-items:center;justify-content:center}
-    .scanwrap.show{display:flex}
-    .scanwrap video{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
-    .scanframe{position:relative;z-index:2;width:min(72vw,300px);aspect-ratio:1;border:3px solid rgba(255,255,255,.9);border-radius:16px;box-shadow:0 0 0 9999px rgba(0,0,0,.45)}
-    .scanbar{position:relative;z-index:2;margin-top:22px;color:#fff;font-size:14px;text-align:center;padding:0 24px;min-height:20px;max-width:340px}
-    .scanbar.err{color:#ffb4b4}
-    .scanclose{position:absolute;top:14px;right:14px;z-index:3;background:rgba(0,0,0,.5);color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:9px;padding:9px 14px;font-size:15px}
-    .cardrow.flash{background:#fff8c5;border-radius:8px;box-shadow:0 0 0 2px #f2cc0c;transition:background .3s,box-shadow .3s}
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>Otvizcards — Cards</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --teal:#0F9D8F; --deep:#0B6F66; --ink:#14171A; --canvas:#F4F6F5; --star:#F5B400;
+    --line:#E4E8E7; --line2:#DFE4E2; --muted:#6B7A77; --muted2:#9AA6A3;
+    --activeBg:#E4F5F2; --rowline:#EFF2F1; --warn:#A8342A; --warnBg:#FBE9E7; --trialBg:#FDF3DE; --trialFg:#96690A;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--canvas);color:var(--ink);font-family:'Inter',system-ui,-apple-system,sans-serif;-webkit-text-size-adjust:100%}
+  input,select,button{font-family:inherit}
+  a{color:inherit;text-decoration:none}
+  .hidden{display:none!important}
+
+  /* ---------- Connect gate ---------- */
+  .connect{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  .cbox{width:100%;max-width:420px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px;box-shadow:0 10px 40px rgba(20,23,26,.06)}
+  .brand{display:flex;align-items:center;gap:8px;margin-bottom:18px}
+  .brand svg{width:26px;height:26px}
+  .brand span{font:700 20px/1 Poppins,sans-serif;letter-spacing:-.3px}
+  .lbl{font:600 10px/1 Inter,sans-serif;letter-spacing:1.2px;color:var(--muted2);margin:12px 0 6px;text-transform:uppercase}
+  .field{width:100%;font-size:16px;padding:11px 12px;border:1px solid var(--line2);border-radius:9px;background:#fff}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .btn{font-size:14px;font-weight:600;padding:11px 14px;border:1px solid var(--line2);border-radius:9px;background:#fff;color:var(--ink);cursor:pointer}
+  .btn.primary{background:var(--teal);border-color:var(--teal);color:#062E28}
+  .btn:disabled{opacity:.5;cursor:default}
+  .hint{font:12px/1.5 Inter,sans-serif;color:var(--muted);margin-top:12px}
+
+  /* ---------- App shell ---------- */
+  .app{display:flex;min-height:100vh}
+  .side{width:214px;background:#fff;border-right:1px solid var(--line);padding:20px 14px;flex:none}
+  .side .brand{margin:2px 0 24px 8px}
+  .side .brand span{font-size:18px}
+  .navsec{font:600 9.5px/1 Poppins,sans-serif;letter-spacing:1.4px;color:var(--muted2);padding:0 8px;margin-bottom:10px}
+  .nav{display:flex;flex-direction:column;gap:2px;margin-bottom:22px}
+  .navitem{display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;font:500 13px/1 Inter,sans-serif;color:#4A5754;cursor:pointer}
+  .navitem .dot{width:15px;height:15px;border-radius:4px;border:1.5px solid var(--muted2)}
+  .navitem.active{background:var(--activeBg);color:var(--deep);font-weight:600}
+  .navitem.active .dot{border-color:var(--deep)}
+  .navitem .count{margin-left:auto;font:600 10.5px/1 Inter,sans-serif;color:var(--muted2)}
+  .main{flex:1;min-width:0;display:flex;flex-direction:column}
+
+  .topbar{height:60px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;padding:0 22px;flex:none}
+  .search{flex:1;max-width:360px;background:var(--canvas);border:1px solid var(--line);border-radius:8px;padding:9px 12px;font:400 13px/1 Inter,sans-serif}
+  .spacer{flex:1}
+  .avatar{width:30px;height:30px;border-radius:50%;background:var(--activeBg);font:600 11px/30px Inter,sans-serif;color:var(--deep);text-align:center}
+
+  .pagehd{display:flex;align-items:baseline;gap:12px;padding:20px 22px 0}
+  .pagehd h1{font:700 20px/1 Poppins,sans-serif;margin:0;letter-spacing:-.4px}
+  .pagehd .sub{font:400 12.5px/1 Inter,sans-serif;color:var(--muted)}
+  .chips{display:flex;gap:7px;padding:16px 22px 14px;flex-wrap:wrap}
+  .chip{background:#fff;color:#4A5754;font:500 11.5px/1 Inter,sans-serif;padding:8px 12px;border-radius:6px;border:1px solid var(--line);cursor:pointer}
+  .chip.on{background:var(--activeBg);color:var(--deep);font-weight:600;border-color:transparent}
+
+  .work{display:flex;gap:16px;padding:0 22px 22px;align-items:flex-start;flex:1;min-width:0}
+  .tablecard{flex:1;min-width:0;background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  table{width:100%;border-collapse:collapse}
+  thead th{font:600 10px/1 Inter,sans-serif;letter-spacing:.9px;color:var(--muted2);text-align:left;padding:11px 16px;border-bottom:1px solid var(--line)}
+  thead th.r{text-align:right}
+  tbody tr{cursor:pointer}
+  tbody tr:hover{background:#FAFBFB}
+  tbody tr.sel{background:var(--activeBg)}
+  tbody td{padding:12px 16px;border-bottom:1px solid var(--rowline);font:500 12.5px/1 Inter,sans-serif;vertical-align:middle}
+  .cid{font:500 12px/1 ui-monospace,Menlo,monospace;color:var(--muted)}
+  .bizname{font:600 13px/1.2 Inter,sans-serif;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:320px}
+  .bizdest{font:400 11px/1.3 Inter,sans-serif;color:var(--muted2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:320px}
+  .badge{display:inline-block;padding:4px 8px;border-radius:5px;font:600 10.5px/1 Inter,sans-serif}
+  .badge.hub{background:var(--activeBg);color:var(--deep)}
+  .badge.simple{background:#EEF1F0;color:#4A5754}
+  .badge.ok{background:var(--activeBg);color:var(--deep)}
+  .badge.muted{background:#F0F2F1;color:var(--muted2)}
+  .badge.warn{background:var(--trialBg);color:var(--trialFg)}
+  .pager{display:flex;align-items:center;justify-content:space-between;padding:12px 16px}
+  .pager .info{font:400 11.5px/1 Inter,sans-serif;color:var(--muted2)}
+  .pager button{padding:6px 10px;border-radius:6px;border:1px solid var(--line);background:#fff;font:600 11.5px/1 Inter,sans-serif;color:var(--ink);cursor:pointer}
+  .pager button:disabled{opacity:.4;cursor:default}
+  .empty{padding:40px 18px;text-align:center;color:var(--muted);font:500 13px/1.5 Inter,sans-serif}
+
+  /* Editor panel */
+  .editor{width:330px;flex:none;background:#fff;border:1px solid #BFE6E0;border-radius:10px;padding:18px;box-shadow:0 6px 22px rgba(20,23,26,.06);position:sticky;top:16px}
+  .editor .ehd{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+  .editor .ehd h2{font:700 14px/1 Poppins,sans-serif;margin:0}
+  .editor .ehd .x{color:var(--muted2);cursor:pointer;font-size:15px}
+  .editor .eid{font:500 11.5px/1 ui-monospace,Menlo,monospace;color:var(--deep);margin-bottom:16px}
+  .seg{display:flex;gap:4px;background:var(--canvas);border-radius:9px;padding:4px;margin-bottom:8px}
+  .seg button{flex:1;text-align:center;padding:8px;border:0;border-radius:6px;background:none;font:500 12px/1 Inter,sans-serif;color:var(--muted);cursor:pointer}
+  .seg button.on{background:var(--teal);color:#062E28;font-weight:600}
+  .ef{margin-bottom:10px}
+  .ef label{font:600 10px/1 Inter,sans-serif;letter-spacing:1.2px;color:var(--muted2);display:block;margin-bottom:5px}
+  .ef input{width:100%;font-size:14px;padding:9px 11px;border:1px solid var(--line2);border-radius:8px}
+  .ef .req{color:var(--warn)}
+  .staffhd{font:600 10px/1 Inter,sans-serif;letter-spacing:1.2px;color:var(--muted2);margin:14px 0 6px}
+  .staffrow{position:relative;border:1px solid var(--line);border-radius:9px;padding:9px;display:flex;flex-direction:column;gap:6px;background:#FBFCFC;margin-bottom:8px}
+  .staffrow .srm{position:absolute;top:7px;right:7px;background:#EEF1F0;border:0;border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer;color:var(--warn)}
+  .staffrow input{font-size:13px;padding:8px 10px;border:1px solid var(--line2);border-radius:7px}
+  .addstaff{width:100%;background:#EEF1F0;border:1px dashed #C3C8CF;border-radius:8px;padding:9px;font:600 12px/1 Inter,sans-serif;color:#4A5754;cursor:pointer;margin-bottom:12px}
+  .eactions{display:flex;gap:8px;margin-top:6px}
+  .eactions .save{flex:1;background:var(--teal);border:0;border-radius:8px;padding:11px;font:600 12.5px/1 Inter,sans-serif;color:#062E28;cursor:pointer}
+  .eactions .save:disabled{opacity:.5}
+  .emsg{font:500 11.5px/1.4 Inter,sans-serif;margin-top:10px;display:none;padding:9px 11px;border-radius:8px}
+  .emsg.ok{display:block;background:var(--activeBg);color:var(--deep)}
+  .emsg.err{display:block;background:var(--warnBg);color:var(--warn)}
+
+  /* Toast */
+  .toast{position:fixed;left:50%;top:16px;transform:translateX(-50%) translateY(-14px);z-index:60;max-width:92%;width:460px;padding:13px 16px;border-radius:11px;font:600 14px/1.35 Inter,sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.18);opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;text-align:center;color:#fff}
+  .toast.show{opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(0)}
+  .toast.ok{background:var(--deep)} .toast.err{background:var(--warn)}
+
+  /* Scanner */
+  .scanwrap{position:fixed;inset:0;z-index:100;background:#000;display:none;flex-direction:column;align-items:center;justify-content:center}
+  .scanwrap.show{display:flex}
+  .scanwrap video{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+  .scanframe{position:relative;z-index:2;width:min(72vw,300px);aspect-ratio:1;border:3px solid rgba(255,255,255,.9);border-radius:16px;box-shadow:0 0 0 9999px rgba(0,0,0,.45)}
+  .scanbar{position:relative;z-index:2;margin-top:22px;color:#fff;font:14px/1.4 Inter,sans-serif;text-align:center;padding:0 24px;min-height:20px;max-width:340px}
+  .scanbar.err{color:#ffb4b4}
+  .scanclose{position:absolute;top:14px;right:14px;z-index:3;background:rgba(0,0,0,.5);color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:9px;padding:9px 14px;font-size:15px}
+
+  @media(max-width:900px){
+    .side{display:none}
+    .work{flex-direction:column}
+    .editor{width:100%;position:static}
+  }
+</style>
 </head>
 <body>
-<header>
-  <h1>Review Cards</h1>
-  <span class="status" id="status">Not connected</span>
-</header>
 
 <div id="toast" class="toast" onclick="this.classList.remove('show')"></div>
 
-<main>
-  <div class="panel">
-    <div class="cfg">
-      <div class="full">
-        <label>GitHub username / org</label>
-        <input id="owner" placeholder="e.g. russang082" autocapitalize="off" autocorrect="off" spellcheck="false">
-      </div>
-      <div class="full">
-        <label>Repository name</label>
-        <input id="repo" value="review-cards" autocapitalize="off" autocorrect="off" spellcheck="false">
-      </div>
-      <div class="full">
-        <label>Branch</label>
-        <input id="branch" value="main" autocapitalize="off" autocorrect="off" spellcheck="false">
-      </div>
-      <div class="full">
-        <label>Fine-grained token (Contents: Read &amp; write)</label>
-        <input id="token" type="password" placeholder="github_pat_…" autocapitalize="off" autocorrect="off" spellcheck="false">
-      </div>
+<!-- ============ CONNECT GATE ============ -->
+<div class="connect" id="connect">
+  <div class="cbox">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 1.6l3.1 6.4 7 1-5 4.9 1.2 7-6.3-3.3-6.3 3.3 1.2-7-5-4.9 7-1z" fill="#0F9D8F"/><circle cx="12" cy="11.2" r="2.6" fill="#fff"/></svg>
+      <span>tvizcards</span>
     </div>
-    <div class="row" style="margin-top:12px">
-      <button id="load">Connect &amp; load cards</button>
-      <button class="secondary" id="remember">Remember on this phone</button>
+    <div class="lbl">GitHub username / org</div>
+    <input class="field" id="owner" placeholder="Abdulqodir082" autocapitalize="off" autocorrect="off" spellcheck="false">
+    <div class="grid2" style="margin-top:10px">
+      <div><div class="lbl">Repository</div><input class="field" id="repo" value="review-cards" autocapitalize="off" autocorrect="off" spellcheck="false"></div>
+      <div><div class="lbl">Branch</div><input class="field" id="branch" value="main" autocapitalize="off" autocorrect="off" spellcheck="false"></div>
     </div>
-    <div class="hint">
-      The token is stored only in this browser (localStorage) when you tap “Remember”, and is sent
-      directly to GitHub — nowhere else. Use a <b>fine-grained</b> token scoped to just this repo with
-      <b>Contents: Read &amp; write</b>. Revoke it anytime from GitHub → Settings → Developer settings.
+    <div class="lbl">Fine-grained token (Contents: Read &amp; write)</div>
+    <input class="field" id="token" type="password" placeholder="github_pat_…" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+    <div class="grid2" style="margin-top:14px">
+      <button class="btn primary" id="loadBtn">Connect &amp; load</button>
+      <button class="btn" id="rememberBtn">Remember on this phone</button>
     </div>
-    <div class="msg" id="cfgmsg"></div>
+    <div class="hint">The token stays in this browser and is sent only to GitHub. Use a fine-grained token limited to this repo with <b>Contents: Read &amp; write</b>.</div>
+    <div class="emsg" id="connectMsg"></div>
   </div>
+</div>
 
-  <div class="panel" id="editor" style="display:none">
-    <div class="toolbar">
-      <button id="scan">📷 Scan Card</button>
-      <button class="secondary" id="add">+ Add card</button>
-      <button id="save">Save changes</button>
+<!-- ============ APP ============ -->
+<div class="app hidden" id="app">
+  <aside class="side">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 1.6l3.1 6.4 7 1-5 4.9 1.2 7-6.3-3.3-6.3 3.3 1.2-7-5-4.9 7-1z" fill="#0F9D8F"/><circle cx="12" cy="11.2" r="2.6" fill="#fff"/></svg>
+      <span>tvizcards</span>
     </div>
-    <div id="rows"></div>
-    <div class="msg" id="savemsg"></div>
-    <div class="hint">
-      Each row is a card. <b>Simple link</b> redirects the card straight to one URL.
-      <b>Hub page</b> shows a small landing page with a Google-review button plus optional
-      Instagram / Facebook / phone / Telegram buttons (Google review URL is required).
-      Edit, then tap <b>Save changes</b> — live cards update within a minute.
+    <div class="navsec">MANAGE</div>
+    <nav class="nav">
+      <div class="navitem active"><span class="dot"></span>Cards<span class="count" id="navCards">—</span></div>
+      <div class="navitem" id="navBiz"><span class="dot"></span>Businesses<span class="count" id="navBizN">—</span></div>
+      <a class="navitem" href="dashboard.html"><span class="dot"></span>Analytics</a>
+    </nav>
+    <div class="navsec">ACCOUNT</div>
+    <nav class="nav">
+      <div class="navitem" id="navSettings"><span class="dot"></span>Settings</div>
+    </nav>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <input class="search" id="search" placeholder="Search card ID, business, destination…">
+      <div class="spacer"></div>
+      <button class="btn" id="scanBtn">📷 Scan</button>
+      <button class="btn primary" id="newBtn">+ New card</button>
+      <div class="avatar" id="avatar">MK</div>
+    </div>
+
+    <div class="pagehd">
+      <h1>Cards</h1>
+      <div class="sub" id="counts">—</div>
+    </div>
+
+    <div class="chips" id="chips">
+      <div class="chip on" data-f="all">All</div>
+      <div class="chip" data-f="hub">Hub mode</div>
+      <div class="chip" data-f="simple">Link only</div>
+      <div class="chip" data-f="unassigned">Unassigned</div>
+    </div>
+
+    <div class="work">
+      <div class="tablecard">
+        <table>
+          <thead><tr><th style="width:92px">CARD ID</th><th>BUSINESS / DESTINATION</th><th style="width:88px">MODE</th><th style="width:110px">STATUS</th></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+        <div class="pager">
+          <div class="info" id="pageInfo">—</div>
+          <div style="display:flex;gap:6px">
+            <button id="prev">Prev</button>
+            <button id="next">Next</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Editor -->
+      <div class="editor hidden" id="editor">
+        <div class="ehd"><h2>Edit card</h2><span class="x" id="edClose">✕</span></div>
+        <div class="eid" id="edId">—</div>
+
+        <div class="seg" id="edMode">
+          <button data-m="simple">Simple link</button>
+          <button data-m="hub" class="on">Hub page</button>
+        </div>
+
+        <div id="edSimple">
+          <div class="ef"><label>DESTINATION URL</label><input id="edDest" placeholder="https://… , tel:… , etc."></div>
+        </div>
+
+        <div id="edHub">
+          <div class="ef"><label>BUSINESS NAME</label><input id="edBiz" placeholder="Denau Osh Markazi"></div>
+          <div class="ef"><label>GOOGLE REVIEW URL <span class="req">*</span></label><input id="edReview" placeholder="https://g.page/r/…/review"></div>
+          <div class="ef"><label>INSTAGRAM</label><input id="edInsta" placeholder="https://instagram.com/handle"></div>
+          <div class="ef"><label>FACEBOOK</label><input id="edFb" placeholder="https://facebook.com/handle"></div>
+          <div class="ef"><label>PHONE</label><input id="edPhone" placeholder="tel:+998901234567"></div>
+          <div class="ef"><label>TELEGRAM</label><input id="edTg" placeholder="https://t.me/handle"></div>
+          <div class="staffhd">STAFF — each shows Call + Instagram (optional)</div>
+          <div id="edStaff"></div>
+          <button class="addstaff" id="edAddStaff">+ Add staff member</button>
+        </div>
+
+        <div class="eactions">
+          <button class="save" id="edSave">Save changes</button>
+          <button class="btn" id="edPreview">Preview</button>
+        </div>
+        <div class="emsg" id="edMsg"></div>
+      </div>
     </div>
   </div>
-</main>
+</div>
 
+<!-- Scanner overlay -->
 <div class="scanwrap" id="scanwrap">
   <video id="scanvideo" playsinline muted></video>
   <button class="scanclose" id="scanclose">✕ Close</button>
   <div class="scanframe"></div>
-  <div class="scanbar" id="scanbar">Point the camera at a card’s QR code…</div>
+  <div class="scanbar" id="scanbar">Point the camera at a card's QR code…</div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/jsqr"></script>
 <script>
 const $ = id => document.getElementById(id);
-let sha = null;          // current mapping.json sha, needed to commit
-let apiBase = '';
-let config = {};         // preserved config block (default_destination, etc.)
+let mapping = { config:{}, cards:{} };
+let sha = null, apiBase = '', ownerRepo = '';
+const state = { filter:'all', search:'', page:1, selected:null };
+const PAGE = 12;
 
-function gh(path, opts) {
-  return fetch('https://api.github.com' + path, Object.assign({
-    headers: {
-      'Authorization': 'Bearer ' + $('token').value.trim(),
-      'Accept': 'application/vnd.github+json',
-      'X-GitHub-Api-Version': '2022-11-28'
-    }
-  }, opts));
-}
+/* ---------- helpers ---------- */
+function gh(path, opts){ return fetch('https://api.github.com'+path, Object.assign({
+  headers:{'Authorization':'Bearer '+$('token').value.trim(),'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'}}, opts)); }
+function b64enc(s){ return btoa(unescape(encodeURIComponent(s))); }
+function b64dec(s){ return decodeURIComponent(escape(atob(s.replace(/\n/g,'')))); }
+async function ghErr(r){ try{ const j=await r.json(); return j.message||('HTTP '+r.status); }catch(e){ return 'HTTP '+r.status; } }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+let toastT=null;
+function toast(ok,text){ const t=$('toast'); t.className='toast show '+(ok?'ok':'err'); t.textContent=text; clearTimeout(toastT); if(ok) toastT=setTimeout(()=>t.classList.remove('show'),4000); }
+function msg(el,ok,text){ el.className='emsg '+(ok?'ok':'err'); el.textContent=text; }
 
-function b64encode(str){ return btoa(unescape(encodeURIComponent(str))); }
-function b64decode(str){ return decodeURIComponent(escape(atob(str))); }
+/* ---------- config persistence ---------- */
+function saveCfg(withToken){ const c={owner:$('owner').value,repo:$('repo').value,branch:$('branch').value}; if(withToken) c.token=$('token').value; try{localStorage.setItem('otvizAdminCfg',JSON.stringify(c));}catch(e){} }
+function loadCfg(){ try{ const c=JSON.parse(localStorage.getItem('otvizAdminCfg')||'{}'); if(c.owner)$('owner').value=c.owner; if(c.repo)$('repo').value=c.repo; if(c.branch)$('branch').value=c.branch; if(c.token)$('token').value=c.token; }catch(e){} }
 
-function show(el, ok, text){ el.className = 'msg ' + (ok ? 'ok' : 'err'); el.textContent = text; }
-
-let toastTimer = null;
-function toast(ok, text){
-  const t = $('toast');
-  t.className = 'toast show ' + (ok ? 'ok' : 'err');
-  t.textContent = text;
-  clearTimeout(toastTimer);
-  if(ok) toastTimer = setTimeout(() => t.classList.remove('show'), 4000);
-}
-
-// Pull GitHub's own error explanation out of a failed response.
-async function ghError(r){
-  try {
-    const j = await r.json();
-    return j.message ? (j.message + (j.errors ? ' — ' + JSON.stringify(j.errors) : '')) : ('HTTP ' + r.status);
-  } catch(e){ return 'HTTP ' + r.status; }
-}
-
-function nextId(map){
-  let max = 0;
-  Object.keys(map).forEach(k => { const n = parseInt(k, 10); if(!isNaN(n) && n > max) max = n; });
-  return String(max + 1).padStart(3, '0');
-}
-
-function renderRows(map){
-  const rows = $('rows');
-  rows.innerHTML = '';
-  Object.keys(map).sort().forEach(id => addRow(id, map[id]));
-}
-
-// Hub fields, in display order. review_url is required (marked with *).
-const HUB_FIELDS = [
-  ['business_name', 'Business name', 'Fillet'],
-  ['review_url',    'Google review URL *', 'https://g.page/r/…/review'],
-  ['instagram',     'Instagram URL', 'https://instagram.com/handle'],
-  ['facebook',      'Facebook URL', 'https://facebook.com/handle'],
-  ['phone',         'Phone', 'tel:+998901234567'],
-  ['telegram',      'Telegram URL', 'https://t.me/handle']
-];
-
-function addRow(id, value){
-  const isHub = value && typeof value === 'object' && value.type === 'hub';
-
-  const wrap = document.createElement('div');
-  wrap.className = 'cardrow' + (isHub ? ' hub' : '');
-  wrap.dataset.id = id;
-
-  let hubInputs = '';
-  HUB_FIELDS.forEach(f => {
-    const star = f[0] === 'review_url' ? '<span class="req"> *</span>' : '';
-    const lbl = f[1].replace(' *', '') ;
-    hubInputs += '<div class="hf"><label>' + lbl + star + '</label>' +
-      '<input class="hub-' + f[0] + '" placeholder="' + f[2] + '" ' +
-      'autocapitalize="off" autocorrect="off" spellcheck="false"></div>';
-  });
-
-  wrap.innerHTML =
-    '<div class="rowhead">' +
-      '<span class="cid"></span>' +
-      '<select class="mode"><option value="simple">Simple link</option><option value="hub">Hub page</option></select>' +
-      '<button class="secondary del" title="Remove">✕</button>' +
-    '</div>' +
-    '<div class="simplebox"><input class="dest" placeholder="https://… , tel:… , etc."></div>' +
-    '<div class="hubbox">' + hubInputs +
-      '<div class="staffhd">Staff — each shows Call + Instagram (optional, e.g. barbers)</div>' +
-      '<div class="stafflist"></div>' +
-      '<button type="button" class="addstaff">+ Add staff member</button>' +
-    '</div>';
-
-  wrap.querySelector('.cid').textContent = id;
-
-  const mode = wrap.querySelector('.mode');
-  mode.value = isHub ? 'hub' : 'simple';
-  mode.onchange = () => wrap.classList.toggle('hub', mode.value === 'hub');
-
-  const staffList = wrap.querySelector('.stafflist');
-  wrap.querySelector('.addstaff').onclick = () => makeStaffRow(staffList, {});
-
-  if (isHub) {
-    HUB_FIELDS.forEach(f => {
-      const el = wrap.querySelector('.hub-' + f[0]);
-      if (value[f[0]]) el.value = value[f[0]];
-    });
-    if (Array.isArray(value.staff)) value.staff.forEach(s => makeStaffRow(staffList, s));
-  } else {
-    wrap.querySelector('.dest').value = (typeof value === 'string') ? value : '';
-  }
-
-  wrap.querySelector('.del').onclick = () => wrap.remove();
-  $('rows').appendChild(wrap);
-}
-
-function makeStaffRow(container, s){
-  s = s || {};
-  const row = document.createElement('div');
-  row.className = 'staffrow';
-  row.innerHTML =
-    '<button type="button" class="srm">✕</button>' +
-    '<input class="st-name" placeholder="Name (e.g. Shuhrat)" autocapitalize="words">' +
-    '<input class="st-phone" placeholder="Phone — tel:+998901234567" autocapitalize="off" spellcheck="false">' +
-    '<input class="st-instagram" placeholder="Instagram URL" autocapitalize="off" spellcheck="false">';
-  row.querySelector('.st-name').value = s.name || '';
-  row.querySelector('.st-phone').value = s.phone || '';
-  row.querySelector('.st-instagram').value = s.instagram || '';
-  row.querySelector('.srm').onclick = () => row.remove();
-  container.appendChild(row);
-}
-
-function collect(){
-  const map = {};
-  document.querySelectorAll('.cardrow').forEach(r => {
-    const id = r.dataset.id;
-    if (r.querySelector('.mode').value === 'hub') {
-      const obj = { type: 'hub' };
-      HUB_FIELDS.forEach(f => {
-        const v = r.querySelector('.hub-' + f[0]).value.trim();
-        if (v) obj[f[0]] = v;   // omit empty optional fields
-      });
-      const staff = [];
-      r.querySelectorAll('.staffrow').forEach(sr => {
-        const name = sr.querySelector('.st-name').value.trim();
-        const phone = sr.querySelector('.st-phone').value.trim();
-        const instagram = sr.querySelector('.st-instagram').value.trim();
-        if (name || phone || instagram) {
-          const o = {};
-          if (name) o.name = name;
-          if (phone) o.phone = phone;
-          if (instagram) o.instagram = instagram;
-          staff.push(o);
-        }
-      });
-      if (staff.length) obj.staff = staff;
-      map[id] = obj;            // review_url validated in save()
-    } else {
-      map[id] = r.querySelector('.dest').value.trim();
-    }
-  });
-  return map;
-}
-
-// Returns a human message if any hub row is missing its required review_url.
-function validateHubs(map){
-  const bad = [];
-  Object.keys(map).forEach(id => {
-    const v = map[id];
-    if (v && typeof v === 'object' && v.type === 'hub' && !v.review_url) bad.push(id);
-  });
-  return bad.length ? ('Hub card(s) missing required Google review URL: ' + bad.join(', ')) : null;
-}
-
+/* ---------- load / classify ---------- */
 async function load(){
-  const owner = $('owner').value.trim(), repo = $('repo').value.trim(), branch = $('branch').value.trim();
-  if(!owner || !repo || !$('token').value.trim()){ show($('cfgmsg'), false, 'Fill in username, repo and token first.'); return; }
-  apiBase = '/repos/' + owner + '/' + repo + '/contents/mapping.json';
-  $('load').disabled = true;
-  try {
-    const r = await gh(apiBase + '?ref=' + encodeURIComponent(branch) + '&t=' + Date.now(), { cache: 'no-store' });
-    if(r.status === 404){ const m='mapping.json not found in that repo/branch.'; show($('cfgmsg'), false, m); toast(false, m); return; }
-    if(r.status === 401 || r.status === 403){ const m='Token rejected ('+r.status+'). It needs Contents: Read & write on this repo.'; show($('cfgmsg'), false, m); toast(false, m); return; }
-    if(!r.ok){ const m=await ghError(r); show($('cfgmsg'), false, m); toast(false, m); return; }
-    const data = await r.json();
-    sha = data.sha;
-    const map = JSON.parse(b64decode(data.content));
-    config = map.config || {};
-    const cards = map.cards || {};
-    renderRows(cards);
-    $('editor').style.display = 'block';
-    $('status').textContent = 'Connected · ' + Object.keys(cards).length + ' cards';
-    show($('cfgmsg'), true, 'Loaded ' + Object.keys(cards).length + ' cards.');
-    toast(true, '✓ Loaded ' + Object.keys(cards).length + ' cards. Edit a URL, then Save changes.');
-  } catch(e){
-    show($('cfgmsg'), false, 'Network error: ' + e.message);
-    toast(false, 'Network error: ' + e.message);
-  } finally {
-    $('load').disabled = false;
-  }
+  const owner=$('owner').value.trim(), repo=$('repo').value.trim(), branch=$('branch').value.trim();
+  if(!owner||!repo||!$('token').value.trim()){ msg($('connectMsg'),false,'Fill username, repo and token.'); return; }
+  ownerRepo=owner+'/'+repo; apiBase='/repos/'+ownerRepo+'/contents/mapping.json';
+  $('loadBtn').disabled=true;
+  try{
+    const r=await gh(apiBase+'?ref='+encodeURIComponent(branch)+'&t='+Date.now(),{cache:'no-store'});
+    if(r.status===401||r.status===403){ msg($('connectMsg'),false,'Token rejected ('+r.status+'). Needs Contents: Read & write.'); return; }
+    if(!r.ok){ msg($('connectMsg'),false,await ghErr(r)); return; }
+    const data=await r.json(); sha=data.sha;
+    const m=JSON.parse(b64dec(data.content));
+    mapping={ config:m.config||{}, cards:m.cards||{} };
+    $('connect').classList.add('hidden'); $('app').classList.remove('hidden');
+    render(); toast(true,'✓ Loaded '+Object.keys(mapping.cards).length+' cards.');
+  }catch(e){ msg($('connectMsg'),false,'Network error: '+e.message); }
+  finally{ $('loadBtn').disabled=false; }
 }
 
-async function save(){
-  const cards = collect();
-  // No format restriction on simple links: they may be full URLs (https://…),
-  // tel: links, wa.me links, or any other text the owner types.
-  const hubErr = validateHubs(cards);
-  if(hubErr){ toast(false, hubErr); show($('savemsg'), false, hubErr); return; }
-  if(!sha){ toast(false, 'Not loaded yet — tap “Connect & load cards” first, then edit and save.'); return; }
-  const out = { config: config, cards: cards };
-  const branch = $('branch').value.trim();
-  $('save').disabled = true;
-  $('save').textContent = 'Saving…';   // in-place feedback, right at the button
-  toast(true, 'Saving…');
-  try {
-    const body = {
-      message: 'Update card mapping via admin',
-      content: b64encode(JSON.stringify(out, null, 2) + '\n'),
-      sha: sha,
-      branch: branch
-    };
-    const r = await gh(apiBase, { method: 'PUT', body: JSON.stringify(body) });
-    if(r.status === 409){ toast(false, 'File changed on GitHub since you loaded it. Tap “Connect & load cards” again, redo your edit, then Save.'); show($('savemsg'), false, 'Conflict (409).'); return; }
-    if(!r.ok){
-      const reason = await ghError(r);
-      const msg = 'Save failed (' + r.status + '): ' + reason;
-      toast(false, msg); show($('savemsg'), false, msg);
-      return;
+function entries(){ return Object.keys(mapping.cards).sort().map(id=>({id,value:mapping.cards[id]})); }
+function classify(value){
+  const def=(mapping.config&&mapping.config.default_destination)||'';
+  if(value&&typeof value==='object'&&value.type==='hub'){
+    const extra=[]; if(value.instagram)extra.push('IG'); if(value.telegram)extra.push('TG'); if(value.facebook)extra.push('FB'); if(value.phone)extra.push('☎'); if(Array.isArray(value.staff)&&value.staff.length)extra.push(value.staff.length+' staff');
+    return {mode:'hub', business:value.business_name||'(no name)', dest:(value.review_url||'no review link')+(extra.length?(' · '+extra.join(' ')):''),
+      status: value.review_url?'Assigned':'Incomplete', stCls: value.review_url?'ok':'warn'};
+  }
+  const s=typeof value==='string'?value:'';
+  if(!s||s===def) return {mode:'simple', business:'—', dest:s?s:'(uses default)', status:'Unassigned', stCls:'muted'};
+  return {mode:'simple', business:'—', dest:s, status:'Assigned', stCls:'ok'};
+}
+
+function filtered(){
+  const q=state.search.trim().toLowerCase();
+  return entries().filter(e=>{
+    const c=classify(e.value);
+    if(state.filter==='hub' && c.mode!=='hub') return false;
+    if(state.filter==='simple' && !(c.mode==='simple' && c.status==='Assigned')) return false;
+    if(state.filter==='unassigned' && c.status!=='Unassigned') return false;
+    if(q){
+      const hay=[e.id, c.business, c.dest].join(' ').toLowerCase()
+        + (e.value&&e.value.staff?(' '+e.value.staff.map(s=>s.name||'').join(' ')):'');
+      if(!hay.toLowerCase().includes(q)) return false;
     }
-    const data = await r.json();
-    sha = data.content.sha;   // update sha for the next save
-    toast(true, '✓ Saved. Live cards update within a minute.');
-    show($('savemsg'), true, 'Saved. Live cards will use the new links shortly.');
-    $('save').textContent = '✓ Saved';
-    setTimeout(() => { $('save').textContent = 'Save changes'; }, 3000);
-  } catch(e){
-    toast(false, 'Network error: ' + e.message);
-    show($('savemsg'), false, 'Network error: ' + e.message);
-  } finally {
-    $('save').disabled = false;
-    if($('save').textContent === 'Saving…') $('save').textContent = 'Save changes';
-  }
+    return true;
+  });
 }
 
-// Persist config (NOT the token) unless "Remember" tapped, which includes the token.
-function saveCfg(withToken){
-  const cfg = { owner:$('owner').value, repo:$('repo').value, branch:$('branch').value };
-  if(withToken) cfg.token = $('token').value;
-  localStorage.setItem('reviewCardsCfg', JSON.stringify(cfg));
-}
-function loadCfg(){
-  try {
-    const cfg = JSON.parse(localStorage.getItem('reviewCardsCfg') || '{}');
-    if(cfg.owner) $('owner').value = cfg.owner;
-    if(cfg.repo) $('repo').value = cfg.repo;
-    if(cfg.branch) $('branch').value = cfg.branch;
-    if(cfg.token) $('token').value = cfg.token;
-  } catch(e){}
-}
+/* ---------- render ---------- */
+function render(){
+  const all=entries();
+  let hub=0, assigned=0, unassigned=0;
+  all.forEach(e=>{ const c=classify(e.value); if(c.mode==='hub')hub++; if(c.status==='Unassigned')unassigned++; else assigned++; });
+  $('counts').textContent = all.length+' total · '+hub+' hubs · '+unassigned+' unassigned';
+  $('navCards').textContent = all.length;
+  $('navBizN').textContent = new Set(all.map(e=>{const v=e.value;return v&&typeof v==='object'?(v.business_name||e.id):null;}).filter(Boolean)).size;
 
-// ---- QR card scanner ----------------------------------------------------
-// Physical cards can carry an id that differs from the number printed on them.
-// Scanning the QR reveals the card's TRUE id so the right row can be edited.
-let scanStream = null, scanRAF = null;
-const scanCanvas = document.createElement('canvas');
-const scanCtx = scanCanvas.getContext('2d', { willReadFrequently: true });
-
-// Pull the id out of a scanned URL, but only if it's one of OUR card links:
-// https://<user>.github.io/review-cards/r.html?id=XXX
-function ourCardId(text){
-  let u;
-  try { u = new URL(String(text).trim()); } catch(e){ return null; }
-  if(!/\.github\.io$/i.test(u.hostname)) return null;
-  if(!/\/review-cards\/r\.html$/i.test(u.pathname)) return null;
-  const id = u.searchParams.get('id');
-  return id ? id.trim() : null;
+  const rows=filtered();
+  const pages=Math.max(1,Math.ceil(rows.length/PAGE));
+  if(state.page>pages) state.page=pages;
+  const start=(state.page-1)*PAGE;
+  const slice=rows.slice(start,start+PAGE);
+  const tb=$('tbody');
+  if(!rows.length){ tb.innerHTML='<tr><td colspan="4"><div class="empty">No cards match.</div></td></tr>'; }
+  else tb.innerHTML=slice.map(e=>{
+    const c=classify(e.value);
+    return '<tr data-id="'+esc(e.id)+'"'+(state.selected===e.id?' class="sel"':'')+'>'+
+      '<td><span class="cid">'+esc(e.id)+'</span></td>'+
+      '<td><div class="bizname">'+esc(c.business)+'</div><div class="bizdest">'+esc(c.dest)+'</div></td>'+
+      '<td><span class="badge '+(c.mode==='hub'?'hub':'simple')+'">'+(c.mode==='hub'?'Hub':'Simple')+'</span></td>'+
+      '<td><span class="badge '+c.stCls+'">'+c.status+'</span></td></tr>';
+  }).join('');
+  tb.querySelectorAll('tr[data-id]').forEach(tr=>tr.onclick=()=>selectCard(tr.dataset.id));
+  $('pageInfo').textContent = rows.length? ('Showing '+(start+1)+'–'+Math.min(start+PAGE,rows.length)+' of '+rows.length) : 'No results';
+  $('prev').disabled=state.page<=1; $('next').disabled=state.page>=pages;
 }
 
-function findRow(id){
-  const rows = [...document.querySelectorAll('.cardrow')];
-  let row = rows.find(r => r.dataset.id === id);
-  if(!row){
-    const n = parseInt(id, 10);
-    if(!isNaN(n)) row = rows.find(r => parseInt(r.dataset.id, 10) === n);
-  }
-  return row || null;
+/* ---------- editor ---------- */
+function makeStaffRow(s){
+  s=s||{};
+  const row=document.createElement('div'); row.className='staffrow';
+  row.innerHTML='<button type="button" class="srm">✕</button>'+
+    '<input class="st-name" placeholder="Name (e.g. Shuhrat)">'+
+    '<input class="st-phone" placeholder="Phone — tel:+998901234567" autocapitalize="off" spellcheck="false">'+
+    '<input class="st-instagram" placeholder="Instagram URL" autocapitalize="off" spellcheck="false">';
+  row.querySelector('.st-name').value=s.name||''; row.querySelector('.st-phone').value=s.phone||''; row.querySelector('.st-instagram').value=s.instagram||'';
+  row.querySelector('.srm').onclick=()=>row.remove();
+  $('edStaff').appendChild(row);
+}
+function setEditorMode(mode){
+  [...$('edMode').children].forEach(b=>b.classList.toggle('on', b.dataset.m===mode));
+  $('edSimple').classList.toggle('hidden', mode!=='simple');
+  $('edHub').classList.toggle('hidden', mode!=='hub');
+}
+function selectCard(id){
+  state.selected=id;
+  const v=mapping.cards[id];
+  const isHub=v&&typeof v==='object'&&v.type==='hub';
+  $('editor').classList.remove('hidden');
+  $('edId').textContent='Card '+id;
+  setEditorMode(isHub?'hub':'simple');
+  $('edDest').value = (!isHub && typeof v==='string')? v : '';
+  $('edBiz').value=isHub?(v.business_name||''):''; $('edReview').value=isHub?(v.review_url||''):'';
+  $('edInsta').value=isHub?(v.instagram||''):''; $('edFb').value=isHub?(v.facebook||''):'';
+  $('edPhone').value=isHub?(v.phone||''):''; $('edTg').value=isHub?(v.telegram||''):'';
+  $('edStaff').innerHTML=''; if(isHub&&Array.isArray(v.staff)) v.staff.forEach(makeStaffRow);
+  $('edMsg').className='emsg';
+  render();
+}
+function collectEditor(){
+  const mode=[...$('edMode').children].find(b=>b.classList.contains('on')).dataset.m;
+  if(mode==='simple') return $('edDest').value.trim();
+  const obj={type:'hub'};
+  const bn=$('edBiz').value.trim(); if(bn)obj.business_name=bn;
+  obj.review_url=$('edReview').value.trim();
+  const ig=$('edInsta').value.trim(); if(ig)obj.instagram=ig;
+  const fb=$('edFb').value.trim(); if(fb)obj.facebook=fb;
+  const ph=$('edPhone').value.trim(); if(ph)obj.phone=ph;
+  const tg=$('edTg').value.trim(); if(tg)obj.telegram=tg;
+  const staff=[];
+  $('edStaff').querySelectorAll('.staffrow').forEach(sr=>{
+    const name=sr.querySelector('.st-name').value.trim(), phone=sr.querySelector('.st-phone').value.trim(), instagram=sr.querySelector('.st-instagram').value.trim();
+    if(name||phone||instagram){ const o={}; if(name)o.name=name; if(phone)o.phone=phone; if(instagram)o.instagram=instagram; staff.push(o); }
+  });
+  if(staff.length)obj.staff=staff;
+  return obj;
+}
+async function saveCard(){
+  if(!state.selected) return;
+  const val=collectEditor();
+  if(val && typeof val==='object' && !val.review_url){ msg($('edMsg'),false,'Google review URL is required for a hub.'); return; }
+  if(typeof val==='string' && val && !/^(https?:|tel:)/i.test(val)){ msg($('edMsg'),false,'Link must start with http://, https:// or tel:'); return; }
+  mapping.cards[state.selected]=val;
+  const branch=$('branch').value.trim();
+  $('edSave').disabled=true; msg($('edMsg'),true,'Saving…');
+  try{
+    const body={ message:'Update card '+state.selected+' via admin',
+      content:b64enc(JSON.stringify(mapping,null,2)+'\n'), sha:sha, branch:branch };
+    const r=await gh(apiBase,{method:'PUT',body:JSON.stringify(body)});
+    if(r.status===409){ msg($('edMsg'),false,'File changed on GitHub. Tap Settings → reconnect, then redo.'); toast(false,'Conflict — reconnect and retry.'); return; }
+    if(!r.ok){ const e=await ghErr(r); msg($('edMsg'),false,'Save failed: '+e); toast(false,'Save failed: '+e); return; }
+    const data=await r.json(); sha=data.content.sha;
+    msg($('edMsg'),true,'✓ Saved & committed.'); toast(true,'✓ Card '+state.selected+' saved.');
+    render();
+  }catch(e){ msg($('edMsg'),false,'Network error: '+e.message); }
+  finally{ $('edSave').disabled=false; }
+}
+function newCard(){
+  let max=0; Object.keys(mapping.cards).forEach(k=>{const n=parseInt(k,10); if(!isNaN(n)&&n>max)max=n;});
+  const id=String(max+1).padStart(3,'0');
+  mapping.cards[id]='';
+  state.search=''; $('search').value=''; state.filter='all';
+  [...$('chips').children].forEach(c=>c.classList.toggle('on',c.dataset.f==='all'));
+  render(); selectCard(id);
+  toast(true,'New card '+id+' — edit and save.');
+}
+function previewCard(){
+  if(!state.selected) return;
+  const base=location.href.replace(/admin\.html.*$/,'');
+  window.open(base+'r.html?id='+encodeURIComponent(state.selected),'_blank');
 }
 
-function highlightRow(row){
-  document.querySelectorAll('.cardrow.flash').forEach(r => r.classList.remove('flash'));
-  row.classList.add('flash');
-  row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  const focusEl = row.classList.contains('hub')
-    ? row.querySelector('.hub-review_url')
-    : row.querySelector('.dest');
-  if(focusEl) focusEl.focus({ preventScroll: true });
-}
-
-function setScanMsg(text, isErr){
-  const b = $('scanbar');
-  b.textContent = text;
-  b.className = 'scanbar' + (isErr ? ' err' : '');
-}
-
-function stopScan(){
-  if(scanRAF){ cancelAnimationFrame(scanRAF); scanRAF = null; }
-  if(scanStream){ scanStream.getTracks().forEach(t => t.stop()); scanStream = null; }
-  $('scanvideo').srcObject = null;
-  $('scanwrap').classList.remove('show');
-}
-
+/* ---------- QR scanner ---------- */
+let scanStream=null,scanRAF=null; const scanCanvas=document.createElement('canvas'); const scanCtx=scanCanvas.getContext('2d',{willReadFrequently:true});
+function ourCardId(text){ let u; try{u=new URL(String(text).trim());}catch(e){return null;} if(!/\.github\.io$/i.test(u.hostname))return null; if(!/\/review-cards\/r\.html$/i.test(u.pathname))return null; const id=u.searchParams.get('id'); return id?id.trim():null; }
+function setScanMsg(t,e){ const b=$('scanbar'); b.textContent=t; b.className='scanbar'+(e?' err':''); }
+function stopScan(){ if(scanRAF){cancelAnimationFrame(scanRAF);scanRAF=null;} if(scanStream){scanStream.getTracks().forEach(t=>t.stop());scanStream=null;} $('scanvideo').srcObject=null; $('scanwrap').classList.remove('show'); }
 async function startScan(){
-  if(typeof jsQR === 'undefined'){ toast(false, 'QR library failed to load. Check your connection and retry.'); return; }
-  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
-    toast(false, 'Camera not available in this browser.'); return;
-  }
-  setScanMsg('Point the camera at a card’s QR code…', false);
-  $('scanwrap').classList.add('show');
-  try {
-    scanStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: 'environment' } }, audio: false
-    });
-  } catch(e){
-    stopScan();
-    toast(false, 'Camera permission denied or unavailable.');
-    return;
-  }
-  const video = $('scanvideo');
-  video.srcObject = scanStream;
-  await video.play().catch(() => {});
-  scanRAF = requestAnimationFrame(tick);
+  if(typeof jsQR==='undefined'){ toast(false,'QR library failed to load.'); return; }
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){ toast(false,'Camera not available.'); return; }
+  setScanMsg("Point the camera at a card's QR code…",false); $('scanwrap').classList.add('show');
+  try{ scanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false}); }
+  catch(e){ stopScan(); toast(false,'Camera permission denied.'); return; }
+  const v=$('scanvideo'); v.srcObject=scanStream; await v.play().catch(()=>{}); scanRAF=requestAnimationFrame(tick);
 }
-
 function tick(){
-  const video = $('scanvideo');
-  if(video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth){
-    scanCanvas.width = video.videoWidth;
-    scanCanvas.height = video.videoHeight;
-    scanCtx.drawImage(video, 0, 0, scanCanvas.width, scanCanvas.height);
-    const img = scanCtx.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
-    const code = jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
-    if(code && code.data){
-      const id = ourCardId(code.data);
-      if(id){
-        const row = findRow(id);
-        stopScan();
-        if(row){
-          highlightRow(row);
-          toast(true, '✓ Scanned card #' + id + ' — highlighted below.');
-        } else {
-          toast(false, 'Scanned card #' + id + ', but it isn’t in the loaded list. Connect & load cards, then try again.');
-        }
-        return;
-      }
-      // A QR was read, but it isn't one of our card URLs.
-      setScanMsg('This doesn’t look like one of our cards.', true);
+  const v=$('scanvideo');
+  if(v.readyState===v.HAVE_ENOUGH_DATA&&v.videoWidth){
+    scanCanvas.width=v.videoWidth; scanCanvas.height=v.videoHeight; scanCtx.drawImage(v,0,0,scanCanvas.width,scanCanvas.height);
+    const img=scanCtx.getImageData(0,0,scanCanvas.width,scanCanvas.height); const code=jsQR(img.data,img.width,img.height,{inversionAttempts:'dontInvert'});
+    if(code&&code.data){ const id=ourCardId(code.data);
+      if(id){ stopScan(); if(mapping.cards[id]!==undefined){ state.search=id; $('search').value=id; state.filter='all'; [...$('chips').children].forEach(c=>c.classList.toggle('on',c.dataset.f==='all')); render(); selectCard(id); toast(true,'✓ Card '+id+' opened.'); } else { toast(false,'Card '+id+' not in this repo.'); } return; }
+      setScanMsg("This doesn't look like one of our cards.",true);
     }
   }
-  scanRAF = requestAnimationFrame(tick);
+  scanRAF=requestAnimationFrame(tick);
 }
 
-$('scan').onclick = startScan;
-$('scanclose').onclick = stopScan;
-
-$('load').onclick = () => { saveCfg(false); load(); };
-$('save').onclick = save;
-$('add').onclick = () => addRow(nextId(collect()), '');
-$('remember').onclick = () => { saveCfg(true); show($('cfgmsg'), true, 'Saved on this phone.'); };
+/* ---------- wire up ---------- */
+$('loadBtn').onclick=()=>{ saveCfg(false); load(); };
+$('rememberBtn').onclick=()=>{ saveCfg(true); msg($('connectMsg'),true,'Saved on this phone.'); };
+$('search').addEventListener('input',e=>{ state.search=e.target.value; state.page=1; render(); });
+$('chips').addEventListener('click',e=>{ const c=e.target.closest('.chip'); if(!c)return; state.filter=c.dataset.f; state.page=1; [...$('chips').children].forEach(x=>x.classList.toggle('on',x===c)); render(); });
+$('prev').onclick=()=>{ if(state.page>1){state.page--;render();} };
+$('next').onclick=()=>{ state.page++; render(); };
+$('newBtn').onclick=newCard;
+$('scanBtn').onclick=startScan; $('scanclose').onclick=stopScan;
+$('edClose').onclick=()=>{ $('editor').classList.add('hidden'); state.selected=null; render(); };
+$('edMode').addEventListener('click',e=>{ const b=e.target.closest('button'); if(b) setEditorMode(b.dataset.m); });
+$('edAddStaff').onclick=()=>makeStaffRow({});
+$('edSave').onclick=saveCard;
+$('edPreview').onclick=previewCard;
+$('navSettings').onclick=()=>{ $('app').classList.add('hidden'); $('connect').classList.remove('hidden'); };
 loadCfg();
 </script>
 </body>
