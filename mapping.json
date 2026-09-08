@@ -142,7 +142,14 @@
     "015": "https://t.me/otvizcards",
     "016": "https://t.me/otvizcards",
     "017": "https://t.me/otvizcards",
-    "018": "https://t.me/otvizcards",
+    "018": {
+      "type": "hub",
+      "business_name": "Kafolat Telefon",
+      "review_url": "https://www.google.com/search?client=ms-android-samsung-ss&hs=0CGB&sca_esv=bb35abc46789b501&sxsrf=APpeQntW-6_KAPzYVRJOtmH103VWZiNZFA:1788853553921&q=amir+holding+yangisi+denau+reviews&uds=AJ5uw1-ZwFgSV-0yxkGywiFI9PRRd8367ZcCAhzLJazzm11vPeYovjW0WYBqfXnzMK5TUw0IC3k7gwZgcilRUwHsJT5VAVvj-EaNrdK2yxlU-FRQHXb1yyOhkUD2Eb6sVacnQuKut-8hdQs6GOTiY0wj0Vqd_biPiOb2SwJ_PIMM1uSXxCKg7vaTpkMYjwJBF8hR8OHF8jM6R-xrMhQksRkHPpsiP7PT23koenZ6tQ3rr5JKqckSdr-YgTgV8KynmgpRfMfo751EE27ThXuIzwYYABjHKMPNp_xjOd5DekIdp10G_56A1gBE1F3M1YOmZah70NAPqGm1WZk6AF3u4AeZr4NeJww4aCvELv-cqWV-OykP-1zJuyEueJMO9HZy7OrxiM309OWVH56Yf_L3j_4b_6VQ3N2QAw&si=APenkKm7iecQ4G6P-TsbSMFKIQtv3EFIqRAFw-i8uEbk55Z-_9e7GlDChMom_gsxTmpFHBGK5G6vkGNQ5Z0FpjUsutcBV7F_ybg7ooqGBf1WO8FH-6he1j3r84qIYq1Pn9kOWIWqa51aLqPJLa5ipKdbGd91p6uU2g%3D%3D&sa=X&ved=2ahUKEwjJxYvlvt6WAxVYRPEDHXF_Eu0Qk8gLegQIJBAB&ictx=1&biw=384&bih=726&dpr=2.81",
+      "instagram": "https://www.instagram.com/denovtelefon?stkn=MW52YTYwdWw2OGxmNA==",
+      "phone": "tel:+99897553300",
+      "telegram": "https://t.me/amirxoldingtelfon"
+    },
     "019": {
       "type": "hub",
       "business_name": "O'zbegim Lavash",
