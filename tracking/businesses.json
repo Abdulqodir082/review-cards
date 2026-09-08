@@ -1,0 +1,10 @@
+{
+  "_help": "One entry per business you want to track. Fill in place_id for each. To find a Place ID from a business name, run:  GOOGLE_MAPS_API_KEY=xxx node tracking/find-place-id.mjs \"Business name, city\"",
+  "businesses": [
+    {
+      "card_id": "019",
+      "name": "O'zbegim Lavash",
+      "place_id": ""
+    }
+  ]
+}

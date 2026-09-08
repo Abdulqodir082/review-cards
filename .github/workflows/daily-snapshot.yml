@@ -1,0 +1,44 @@
+name: Daily review snapshot
+
+on:
+  schedule:
+    # 06:00 UTC daily (= 11:00 in Uzbekistan, UTC+5). GitHub may delay scheduled
+    # runs by a few minutes under load — that's normal.
+    - cron: '0 6 * * *'
+  workflow_dispatch:   # lets you trigger a run by hand from the Actions tab
+
+permissions:
+  contents: write      # needed to commit tracking-history.json back to the repo
+
+concurrency:
+  group: daily-snapshot
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Collect review snapshot
+        env:
+          GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+        run: node tracking/snapshot.mjs
+
+      - name: Commit updated history (if changed)
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add tracking-history.json
+          if git diff --cached --quiet; then
+            echo "No changes — nothing to commit."
+          else
+            git commit -m "chore: daily review snapshot ($(date -u +%Y-%m-%d))"
+            git push
+          fi
