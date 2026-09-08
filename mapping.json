@@ -143,7 +143,15 @@
     "016": "https://t.me/otvizcards",
     "017": "https://t.me/otvizcards",
     "018": "https://t.me/otvizcards",
-    "019": "https://t.me/otvizcards",
+    "019": {
+      "type": "hub",
+      "business_name": "O'zbegim Lavash",
+      "review_url": "https://www.google.com/search?client=ms-android-samsung-ss&hs=araq&sca_esv=a9c0e99a3096cf33&sxsrf=APpeQnsP0HpZctybP2tvCbq9beckxH6lzA:1788850888426&q=o%E2%80%98zbegim+lavash+sho%CA%BBrchi+reviews&uds=AJ5uw18f9tEoNUMO_pA-SQnS4CytxtKpJ0vE9TRKXiOfLN3UcCXIookCQIuPEbaY-ShdFhJCqxgvXneqJHcyI4jI79pAoCbOeVwoKcZNJYmS4POcDOF-2ksC1lZYdIYtGd1pTCYm2MVbc2gvNNEvG9wsvsBXLEnjTdnhGpTPk-IKaV-4ZpGuGK_rexoP5HlvrmeAoJK9BKDTkeoVyvxhopW-_P2lC8SFDRcvkyeQ4Rjj0Ff944c1_LXUlxJP6ON3j3GBKcJgE4E4JCJRioY0VuwZZ5glAoCD8QYTW9a51srq65foUDT9z_Zwq2Yezp8uI_GipC0f-6hq5ERox60yTtCyKTPnl3J5RQ&si=APenkKm7iecQ4G6P-TsbSMFKIQtv3EFIqRAFw-i8uEbk55Z-__rPZAbruOXDfPlHkC7xqSxtjfOEbzGyFcs5pc07hoyLa38wZXu4_KIiRM_jcLBn1c9DN1-HQbFT2zyhWITnVU1KgHWjuClI_KY1C11anpKXEu5eow%3D%3D&sa=X&ved=2ahUKEwil1IrutN6WAxWmcvEDHSRmL_wQk8gLegQIFhAB&ictx=1&biw=384&bih=797&dpr=2.81",
+      "instagram": "https://www.instagram.com/ozbegim.lavash/?hl=en",
+      "facebook": "https://www.facebook.com/ozbegimlavash/",
+      "phone": "tel:+998778000016.",
+      "telegram": "https://t.me/Ozbegim_lavash"
+    },
     "020": "https://t.me/otvizcards",
     "021": "https://t.me/otvizcards",
     "022": "https://t.me/otvizcards",
