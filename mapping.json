@@ -141,7 +141,15 @@
     "014": "https://t.me/otvizcards",
     "015": "https://t.me/otvizcards",
     "016": "https://t.me/otvizcards",
-    "017": "https://t.me/otvizcards",
+    "017": {
+      "type": "hub",
+      "business_name": "Denau Barbershop Pro",
+      "review_url": "https://g.page/r/CdDywUw_8kiNEBM/review",
+      "instagram": "https://www.instagram.com/alxanov_shuhrat?stkn=MWoxMDk0OHZrMHhrcw==",
+      "facebook": "https://www.instagram.com/___fayoziddin?stkn=MWJyOHV1eDgybG90dA%3D%3D&utm_source=qr",
+      "phone": "tel:+998979090107",
+      "telegram": "https://t.me/o1_fayoz"
+    },
     "018": {
       "type": "hub",
       "business_name": "Foodies Denov",
