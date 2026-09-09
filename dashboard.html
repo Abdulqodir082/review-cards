@@ -226,9 +226,9 @@
       </div>
     </div>
 
-    <div class="lbl">Google Place ID</div>
-    <input class="field" id="bizPlace" placeholder="ChIJ… (from the Place ID Finder)">
-    <div class="sub" style="margin:6px 0 0">Get it from <a class="link" href="https://developers.google.com/maps/documentation/places/web-service/place-id" target="_blank" rel="noopener">Google's Place ID Finder</a> — search the business on the map, copy the ID.</div>
+    <div class="lbl">Google Place ID <span style="color:var(--muted2);font-weight:400;letter-spacing:0;text-transform:none">— optional</span></div>
+    <input class="field" id="bizPlace" placeholder="ChIJ…  (leave empty for manual tracking)">
+    <div class="sub" style="margin:6px 0 0">Only needed for <b>automatic</b> daily fetching. Leave it blank to track this business <b>manually</b> — you'll enter the review count yourself via “Log a review count”. Place IDs come from <a class="link" href="https://developers.google.com/maps/documentation/places/web-service/place-id" target="_blank" rel="noopener">Google's Place ID Finder</a>.</div>
 
     <div class="lbl">GitHub token (Contents: Read &amp; write)</div>
     <input class="field" id="bizToken" type="password" placeholder="github_pat_…" autocomplete="off">
@@ -544,7 +544,7 @@ async function saveBiz(){
   const plan=$('bizPlan').value;
   const token=$('bizToken').value.trim();
   if(!name){ bizMsg(false,'Enter the business name.'); return; }
-  if(!place){ bizMsg(false,'Enter the Google Place ID (from the finder link).'); return; }
+  if(!card && !place){ bizMsg(false,'Enter a card ID (for manual tracking) or a Place ID (for automatic).'); return; }
   if(!token){ bizMsg(false,'Paste a GitHub token with Contents: Read & write.'); return; }
   if(card) card = card.replace(/\D/g,'').padStart(3,'0');   // normalise 17 -> 017
   try{ localStorage.setItem('otvizDashToken', token); }catch(e){}
