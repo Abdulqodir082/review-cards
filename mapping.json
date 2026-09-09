@@ -125,6 +125,7 @@
     "218": "https://t.me/otvizcards",
     "219": "https://t.me/otvizcards",
     "220": "https://t.me/otvizcards",
+    "221": "",
     "001": "https://t.me/russang82",
     "002": "https://yandex.uz/maps/org/officina/101156688966/",
     "003": "https://g.page/r/CQ2iBo6joJICECE/review",
@@ -139,7 +140,22 @@
     "012": "https://t.me/otvizcards",
     "013": "https://t.me/otvizcards",
     "014": "https://t.me/otvizcards",
-    "015": "https://t.me/otvizcards",
+    "015": {
+      "type": "hub",
+      "business_name": "SHUKRONA KLINIKASI",
+      "review_url": "https://www.google.com/search?newwindow=1&client=ms-android-samsung-ss&hs=DHbq&sca_esv=444dee17e46a57e2&sxsrf=APpeQntOrNf8SZlV9T2HhoI_5wj6zfNJRA:1788946223894&q=shukrona+klinikasi+denau+reviews&uds=AJ5uw1_JPM6at7jtg_6Jv_lv927LpTffoc9cSb_eXYjY9yEOTrMv2F1Svr-MnIh0I0HJjuFEM-5UvLCFkTPlWJ-HlrJ0Al4Qcy_NMv8RWr-CC8ZJ4fO6cGKx5YaxzXi9yvZFEdhvs6jK46kpOZx7FpKTDRdfihpxzqoTRQU9Oh7S5qK6fvauw6okIevI9fUiL_QJhXkcNE5PJDKiivShwR7RsnkM6_8_GWWRQmAflMJzi5oxbDSxY-yobQiE6QtVuJf7PHSv3h83hX-IVxvTig61nIHHXSu1mWoGB6_0xVGDIm50trkkaYWoUfZhyTCUeETAzcZRHtjNWPPGGZ9YN3BB_Di9qtoJ_kTU4Hi3iCQIpV7i6O0nm4cE-j6tO34GowyMwoeHnosDWMfdoAfoNb7TW59NokXRYQ&si=APenkKm7iecQ4G6P-TsbSMFKIQtv3EFIqRAFw-i8uEbk55Z-_4AksJzemetzxx_GUX-JnjRPtsOqJj0REddmm5DDXAJQc-O7zPuO_rklaorOqWUu7zPi_MWOTGLlCGzGISgsqCaqxHAxK9957stD4CmTqUkFZ-S7Hg%3D%3D&sa=X&ved=2ahUKEwjJ5smBmOGWAxX-P_sDHZEjEu4Qk8gLegQIFxAB&ictx=1&biw=384&bih=726&dpr=2.81#sbfbu=1&pi=shukrona%20klinikasi%20denau%20reviews",
+      "instagram": "https://www.instagram.com/shukrona.diagnostika?stkn=MW5yMWM0YTUxb3h4cw==",
+      "facebook": "https://www.facebook.com/p/SHUKRONAKlinikasi-61573148072836/",
+      "phone": "tel:+998956500535",
+      "telegram": "https://t.me/shukrona_diagnostikamarkazi",
+      "staff": [
+        {
+          "name": "Rustam Sanginov (Laborant)",
+          "phone": "tel:+998975504482",
+          "instagram": "https://t.me/shukrona_diagnostikamarkazi"
+        }
+      ]
+    },
     "016": {
       "type": "hub",
       "business_name": "O'zbegim Lavash",
