@@ -8,5 +8,15 @@
     "rating": null,
     "review_count": 0,
     "source": "manual"
+  },
+  {
+    "card_id": "019",
+    "business_name": "O'zbegim Lavash",
+    "place_id": null,
+    "date": "2026-09-09",
+    "collected_at": "2026-09-09T05:41:31.250Z",
+    "rating": null,
+    "review_count": 1,
+    "source": "manual"
   }
 ]
