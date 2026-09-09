@@ -5,6 +5,12 @@
       "card_id": "019",
       "name": "O'zbegim Lavash",
       "place_id": ""
+    },
+    {
+      "card_id": "016",
+      "name": "O'zbegim Lavash",
+      "place_id": "",
+      "plan": "trial"
     }
   ]
 }
