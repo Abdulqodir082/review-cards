@@ -93,6 +93,22 @@
   .badge.expired{background:#FBE9E7;color:#A8342A}
   .badge.none{background:#F0F2F1;color:var(--muted2)}
   .loading{padding:60px;text-align:center;color:var(--muted2);font:500 13px/1 Inter,sans-serif}
+  /* Modal */
+  .overlay{position:fixed;inset:0;background:rgba(20,23,26,.45);display:none;align-items:center;justify-content:center;padding:20px;z-index:70}
+  .overlay.show{display:flex}
+  .modal{width:100%;max-width:440px;background:#fff;border-radius:14px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+  .modal h2{font:700 16px/1 Poppins,sans-serif;margin:0 0 4px}
+  .modal .sub{font:400 12px/1.5 Inter,sans-serif;color:var(--muted);margin-bottom:16px}
+  .modal .lbl{font:600 10px/1 Inter,sans-serif;letter-spacing:1.2px;color:var(--muted2);margin:12px 0 6px;text-transform:uppercase}
+  .modal .field{width:100%;font-size:15px;padding:10px 12px;border:1px solid var(--line2);border-radius:9px;background:#fff}
+  .modal .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .modal .acts{display:flex;gap:8px;margin-top:18px}
+  .modal .acts .save{flex:1;background:var(--teal);border:0;border-radius:9px;padding:12px;font:600 13px/1 Inter,sans-serif;color:#062E28;cursor:pointer}
+  .modal .acts .cancel{background:#fff;border:1px solid var(--line2);border-radius:9px;padding:12px 16px;font:600 13px/1 Inter,sans-serif;color:var(--ink);cursor:pointer}
+  .modal .link{color:var(--teal);font-weight:600}
+  .modal .msg{font:500 12px/1.4 Inter,sans-serif;margin-top:12px;display:none;padding:10px 12px;border-radius:8px}
+  .modal .msg.ok{display:block;background:var(--activeBg);color:var(--deep)}
+  .modal .msg.err{display:block;background:#FBE9E7;color:#A8342A}
   @media(max-width:900px){
     .side{display:none} .kpis{grid-template-columns:1fr 1fr} .grid{grid-template-columns:1fr}
     .topbar{flex-wrap:wrap;height:auto;padding:12px}
@@ -128,6 +144,7 @@
         <button data-r="all">All</button>
       </div>
       <button class="btn" id="exportBtn">Export CSV</button>
+      <button class="btn primary" id="addBizBtn">+ Add business</button>
     </div>
 
     <!-- KPI tiles -->
@@ -185,6 +202,42 @@
         <div id="tableArea"><div class="loading">Loading…</div></div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Add / edit business modal -->
+<div class="overlay" id="bizOverlay">
+  <div class="modal">
+    <h2 id="bizTitle">Add business</h2>
+    <div class="sub">Adds the business to daily tracking. The next run fetches its rating &amp; review count automatically.</div>
+
+    <div class="lbl">Business name</div>
+    <input class="field" id="bizName" placeholder="O'zbegim Lavash">
+
+    <div class="two">
+      <div><div class="lbl">Card ID</div><input class="field" id="bizCard" placeholder="019"></div>
+      <div><div class="lbl">Plan</div>
+        <select class="field" id="bizPlan">
+          <option value="">— none —</option>
+          <option value="trial">Trial</option>
+          <option value="paid">Paid</option>
+          <option value="expired">Expired</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="lbl">Google Place ID</div>
+    <input class="field" id="bizPlace" placeholder="ChIJ… (from the Place ID Finder)">
+    <div class="sub" style="margin:6px 0 0">Get it from <a class="link" href="https://developers.google.com/maps/documentation/places/web-service/place-id" target="_blank" rel="noopener">Google's Place ID Finder</a> — search the business on the map, copy the ID.</div>
+
+    <div class="lbl">GitHub token (Contents: Read &amp; write)</div>
+    <input class="field" id="bizToken" type="password" placeholder="github_pat_…" autocomplete="off">
+
+    <div class="acts">
+      <button class="save" id="bizSave">Add business</button>
+      <button class="cancel" id="bizCancel">Cancel</button>
+    </div>
+    <div class="msg" id="bizMsg"></div>
   </div>
 </div>
 
@@ -473,7 +526,61 @@ async function saveSnapshot(){
   finally { $('logSave').disabled = false; }
 }
 
+// ---- Add business (commits to tracking/businesses.json) ----
+function bizMsg(ok,text){ const m=$('bizMsg'); m.className='msg '+(ok?'ok':'err'); m.textContent=text; }
+function openAddBiz(){
+  $('bizTitle').textContent='Add business';
+  $('bizName').value=''; $('bizCard').value=''; $('bizPlace').value=''; $('bizPlan').value='';
+  bizMsg(true,''); $('bizMsg').className='msg';
+  try{ const t=localStorage.getItem('otvizDashToken'); if(t) $('bizToken').value=t; }catch(e){}
+  $('bizOverlay').classList.add('show');
+}
+function closeAddBiz(){ $('bizOverlay').classList.remove('show'); }
+
+async function saveBiz(){
+  const name=$('bizName').value.trim();
+  let card=$('bizCard').value.trim();
+  const place=$('bizPlace').value.trim();
+  const plan=$('bizPlan').value;
+  const token=$('bizToken').value.trim();
+  if(!name){ bizMsg(false,'Enter the business name.'); return; }
+  if(!place){ bizMsg(false,'Enter the Google Place ID (from the finder link).'); return; }
+  if(!token){ bizMsg(false,'Paste a GitHub token with Contents: Read & write.'); return; }
+  if(card) card = card.replace(/\D/g,'').padStart(3,'0');   // normalise 17 -> 017
+  try{ localStorage.setItem('otvizDashToken', token); }catch(e){}
+
+  $('bizSave').disabled=true; bizMsg(true,'Saving…');
+  const api='https://api.github.com/repos/'+OWNER+'/'+REPO+'/contents/tracking/businesses.json';
+  try{
+    const gr=await fetch(api+'?ref='+BRANCH+'&t='+Date.now(), {headers:ghHeaders(token), cache:'no-store'});
+    if(!gr.ok){ const e=await gr.json().catch(()=>({})); bizMsg(false,'Load failed ('+gr.status+'): '+(e.message||'')); $('bizSave').disabled=false; return; }
+    const meta=await gr.json();
+    const data=JSON.parse(decodeURIComponent(escape(atob(meta.content.replace(/\n/g,'')))));
+    if(!Array.isArray(data.businesses)) data.businesses=[];
+    // upsert by card_id (if given) else by name
+    let row=data.businesses.find(b=> (card && b.card_id===card) || (!card && (b.name||'').toLowerCase()===name.toLowerCase()));
+    if(!row){ row={}; data.businesses.push(row); }
+    row.card_id = card || row.card_id || '';
+    row.name = name;
+    row.place_id = place;
+    if(plan) row.plan = plan; else delete row.plan;
+
+    const put=await fetch(api,{method:'PUT',headers:ghHeaders(token),
+      body:JSON.stringify({message:'Add/update tracked business: '+name, content:b64encode(JSON.stringify(data,null,2)+'\n'), sha:meta.sha, branch:BRANCH})});
+    if(!put.ok){ const e=await put.json().catch(()=>({})); bizMsg(false,'Save failed ('+put.status+'): '+(e.message||'')); $('bizSave').disabled=false; return; }
+    BUSINESSES=data.businesses;
+    bizMsg(true,'✓ Added. The daily job will collect its numbers on the next run.');
+    populateLogger(); renderAll();
+    setTimeout(closeAddBiz, 1200);
+  }catch(e){ bizMsg(false,'Error: '+e.message); }
+  finally{ $('bizSave').disabled=false; }
+}
+
 // ---- wire up ----
+$('addBizBtn').onclick = openAddBiz;
+$('bizCancel').onclick = closeAddBiz;
+$('bizSave').onclick = saveBiz;
+$('bizOverlay').addEventListener('click', e=>{ if(e.target===$('bizOverlay')) closeAddBiz(); });
 $('rangeSeg').addEventListener('click', e=>{
   const b = e.target.closest('button'); if(!b) return;
   range = b.dataset.r;
