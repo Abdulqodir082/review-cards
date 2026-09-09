@@ -140,7 +140,15 @@
     "013": "https://t.me/otvizcards",
     "014": "https://t.me/otvizcards",
     "015": "https://t.me/otvizcards",
-    "016": "https://t.me/otvizcards",
+    "016": {
+      "type": "hub",
+      "business_name": "O'zbegim Lavash",
+      "review_url": "https://g.page/r/CRmHP1CGPOKMECE/review",
+      "instagram": "https://www.instagram.com/ozbegim.lavash/?hl=en",
+      "facebook": "https://www.facebook.com/ozbegimlavash/",
+      "phone": "tel:+998778000016",
+      "telegram": "https://t.me/Ozbegim_lavash"
+    },
     "017": {
       "type": "hub",
       "business_name": "Denau Barbershop Pro",
