@@ -169,10 +169,25 @@
       "type": "hub",
       "business_name": "Denau Barbershop Pro",
       "review_url": "https://g.page/r/CdDywUw_8kiNEBM/review",
-      "instagram": "https://www.instagram.com/alxanov_shuhrat?stkn=MWoxMDk0OHZrMHhrcw==",
-      "facebook": "https://www.instagram.com/___fayoziddin?stkn=MWJyOHV1eDgybG90dA%3D%3D&utm_source=qr",
+      "instagram": "https://www.instagram.com/___fayoziddin?stkn=MWJyOHV1eDgybG90dA%3D%3D&utm_source=qr",
       "phone": "tel:+998979090107",
-      "telegram": "https://t.me/o1_fayoz"
+      "telegram": "https://t.me/o1_fayoz",
+      "staff": [
+        {
+          "name": "Shuhrat",
+          "phone": "tel: +998915105710",
+          "instagram": "https://www.instagram.com/alxanov_shuhrat?stkn=MWoxMDk0OHZrMHhrcw=="
+        },
+        {
+          "name": "Abdulla",
+          "phone": "tel:+998507288808",
+          "instagram": "https://www.instagram.com/gulomuv2112?stkn=aWFmNXEwYWk5ZXQ4"
+        },
+        {
+          "name": "Fayoziddin",
+          "phone": "tel:+998"
+        }
+      ]
     },
     "018": {
       "type": "hub",
