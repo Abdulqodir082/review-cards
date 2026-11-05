@@ -16,8 +16,10 @@ Commands:
 Environment:
   IG_ACCESS_TOKEN   long-lived token (GitHub secret). Required for check/publish/refresh.
   IG_USER_ID        optional; looked up from the token when empty.
-  IG_GRAPH_HOST     optional; default graph.instagram.com (Instagram Login).
-                    Use graph.facebook.com for a Facebook-Page-linked token.
+  IG_GRAPH_HOST     optional; picked from the token when empty:
+                    "IG..." tokens (Instagram Login) use graph.instagram.com,
+                    "EAA..." tokens (Unified / Facebook Login, system-user
+                    tokens) use graph.facebook.com.
   IG_API_VERSION    optional; default v23.0.
   PUBLIC_BASE_URL   where the repo files are publicly served.
                     Default https://abdulqodir082.github.io/review-cards
@@ -42,7 +44,14 @@ ROOT = Path(__file__).resolve().parent.parent
 QUEUE = ROOT / "instagram" / "queue"
 POSTED = ROOT / "instagram" / "posted"
 
-GRAPH_HOST = os.environ.get("IG_GRAPH_HOST") or "graph.instagram.com"
+def _pick_host() -> str:
+    if os.environ.get("IG_GRAPH_HOST"):
+        return os.environ["IG_GRAPH_HOST"]
+    tok = os.environ.get("IG_ACCESS_TOKEN", "").strip()
+    return "graph.instagram.com" if tok.startswith("IG") else "graph.facebook.com"
+
+
+GRAPH_HOST = _pick_host()
 API_VERSION = os.environ.get("IG_API_VERSION") or "v23.0"
 PUBLIC_BASE_URL = (os.environ.get("PUBLIC_BASE_URL")
                    or "https://abdulqodir082.github.io/review-cards").rstrip("/")
@@ -191,9 +200,17 @@ def account() -> tuple[str, str]:
         me = api("GET", "me", {"fields": "user_id,username"})
         uid = os.environ.get("IG_USER_ID") or me.get("user_id") or me.get("id")
         return str(uid), me.get("username", "?")
-    uid = os.environ.get("IG_USER_ID")
+    uid = os.environ.get("IG_USER_ID", "").strip()
     if not uid:
-        sys.exit("With graph.facebook.com, set the IG_USER_ID secret too.")
+        # Find the Instagram account through the Facebook Pages the token can see.
+        pages = api("GET", "me/accounts",
+                    {"fields": "name,instagram_business_account{id,username}"}).get("data", [])
+        found = [p["instagram_business_account"] for p in pages if p.get("instagram_business_account")]
+        if len(found) != 1:
+            names = ", ".join("@" + f.get("username", "?") for f in found) or "none"
+            sys.exit(f"Could not pick the Instagram account automatically (found: {names}). "
+                     "Add the IG_USER_ID secret (see instagram/SETUP.md).")
+        return str(found[0]["id"]), found[0].get("username", "?")
     me = api("GET", uid, {"fields": "username"})
     return uid, me.get("username", "?")
 
@@ -371,7 +388,8 @@ def cmd_publish(commit: bool) -> int:
 
 def cmd_refresh() -> int:
     if GRAPH_HOST != "graph.instagram.com":
-        sys.exit("Token refresh here is only for Instagram Login tokens.")
+        print("This token type does not expire (or is renewed by Meta), nothing to do.")
+        return 0
     res = urllib.request.urlopen(
         "https://graph.instagram.com/refresh_access_token?"
         + urllib.parse.urlencode({"grant_type": "ig_refresh_token", "access_token": token()}),

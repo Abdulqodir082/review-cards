@@ -1,7 +1,7 @@
 # Instagram poster
 
 Posts to the Otvizcards Instagram account with Meta's free official API
-(Instagram Graph API, "Instagram Login" flavour). Runs in GitHub Actions
+(Instagram Graph API; system-user token via Unified login, or Instagram Login). Runs in GitHub Actions
 (`.github/workflows/instagram.yml`), Python standard library only.
 
 First-time setup for Ali: [SETUP.md](SETUP.md).
@@ -69,6 +69,6 @@ Locally: `python3 instagram/publish.py validate`.
 
 | Secret | Needed | What |
 |---|---|---|
-| `IG_ACCESS_TOKEN` | yes | long-lived Instagram token (SETUP.md step 4) |
+| `IG_ACCESS_TOKEN` | yes | system-user token (`EAA...`, never expires) or Instagram-Login token (`IG...`, 60 days); SETUP.md |
 | `GH_SECRETS_PAT` | optional | fine-grained token with Secrets read/write on this repo, so the renewed token is saved automatically |
 | `IG_USER_ID` | optional | only if the account id cannot be read from the token |
