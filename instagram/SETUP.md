@@ -15,28 +15,35 @@ In the Instagram app: **Profile → ☰ menu → Account type and tools**.
 If it says "Switch to professional account", tap it and pick **Business**.
 If it already says "Switch to personal account", you are done with this step.
 
-## Step 2. Create a free Meta developer app
+## Step 2. Become a Meta developer (free, one time)
 
-1. Open <https://developers.facebook.com/apps> and log in with Facebook.
-   If it asks you to register as a developer, accept and verify your phone.
-2. Click **Create app**.
-3. App name: `Otvizcards Poster`. Contact email: yours. Click **Next**.
-4. Use case: pick **Manage messaging & content on Instagram**. Click **Next**.
-5. Business portfolio: choose **I don't want to connect a business portfolio yet**. Click **Next**, then **Create app**.
+1. Open <https://developers.facebook.com> and log in with your Facebook account.
+2. If you have never used it before, you will not see any apps yet. Click
+   **Get started** (top right) and finish the short sign-up: accept the terms,
+   confirm your phone or email, and pick a role (e.g. "Developer").
 
-## Step 3. Turn on posting permission
+## Step 3. Create the app
 
-1. In the app's left menu open **Use cases**, then **Customize** next to the Instagram use case.
-2. Under **Permissions**, make sure these are added (click **Add** if not):
-   - `instagram_business_basic`
-   - `instagram_business_content_publish`
+1. Open <https://developers.facebook.com/apps/creation/>
+   (or **My Apps** → **Create App** at the top right).
+2. App details: name `Otvizcards Poster`, your email. Click **Next**.
+3. Use case: choose **Other**. Click **Next**.
+4. App type: choose **Business**. Click **Next**.
+5. If it asks about a business portfolio, pick **I don't want to connect a business portfolio yet**.
+6. Click through **Next** and **Create app** / **Go to dashboard**.
 
-## Step 4. Connect otvizcards and copy the token
+## Step 4. Add Instagram and copy the token
 
-1. In the same Instagram use case, open **API setup with Instagram login**.
-2. Under **Generate access tokens**, click **Add account** and log in to **otvizcards** on Instagram. Allow everything it asks.
-   - If it says the account needs a tester role: go to **App roles → Roles → Add people → Instagram Tester**, type `otvizcards`. Then in Instagram open **Settings → Website permissions → Apps and websites → Tester invites** and accept. Come back and click **Add account** again.
-3. Next to otvizcards, click **Generate token**, tick the box, and **copy** the long token.
+1. On the app dashboard, scroll to **Instagram** ("Allow creators and businesses
+   to ... publish content ...") and click **Set up**.
+2. In the left menu open **Instagram → API setup with Instagram login**.
+3. Under **1. Generate access tokens**, click **Add account** and log in to
+   **otvizcards** on Instagram. Allow everything it asks.
+   The Instagram account must be **public** and **professional** (Step 1).
+4. Next to otvizcards, click **Generate token**, tick the box, and **copy** the long token.
+
+Skip the other sections on that page (webhooks, business login settings, App Review).
+They are only for apps other people use.
 
 Do **not** send this token to Claude or anyone in chat. It is a password for your Instagram.
 
@@ -75,7 +82,7 @@ If you skip this, just repeat Step 4 and Step 5 every ~55 days.
 
 | What you see | What to do |
 |---|---|
-| `IG_ACCESS_TOKEN is not set` | Do Step 5 again, name must be exactly `IG_ACCESS_TOKEN`. |
+| `IG_ACCESS_TOKEN is not set` | Do the GitHub secret step again, name must be exactly `IG_ACCESS_TOKEN`. |
 | `Invalid OAuth access token` / `Session has expired` | Token expired. Repeat Step 4 and Step 5. |
-| `permission` / `(#10)` error | Step 3: add `instagram_business_content_publish`, then make a new token. |
+| `permission` / `(#10)` error | In the app: **App Review → Permissions and features**, make sure `instagram_business_content_publish` is there, then make a new token. |
 | `file never became public` | GitHub Pages must be on (repo Settings → Pages → main / root). |
