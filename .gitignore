@@ -1,2 +1,3 @@
 # Local zip bundles for the supplier (rebuild as needed)
 *.zip
+__pycache__/
