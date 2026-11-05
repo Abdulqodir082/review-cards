@@ -1,0 +1,104 @@
+name: Instagram poster
+
+# How posting works:
+#   1. A new post is added to instagram/queue/<name>/ in a pull request.
+#   2. The "validate" job checks it on the pull request (no token needed).
+#   3. Ali reviews the PR. Merging it IS the approval to publish.
+#   4. On merge, the "publish" job posts it and moves it to instagram/posted/.
+# Posts with "publish_at" in the future wait; the hourly run posts them when due.
+
+on:
+  pull_request:
+    paths: ['instagram/**']
+  push:
+    branches: [main]
+    paths: ['instagram/queue/**']
+  schedule:
+    - cron: '7 * * * *'      # hourly: posts scheduled with publish_at
+    - cron: '0 4 1,15 * *'   # 1st and 15th: renew the 60-day token
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'What to do'
+        type: choice
+        options: [check, publish, refresh-token]
+        default: check
+
+permissions:
+  contents: write
+
+concurrency:
+  group: instagram-poster
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 instagram/publish.py validate
+
+  check:
+    if: github.event_name == 'workflow_dispatch' && inputs.action == 'check'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 instagram/publish.py check
+        env:
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+
+  publish:
+    if: >-
+      github.event_name == 'push' ||
+      (github.event_name == 'schedule' && github.event.schedule == '7 * * * *') ||
+      (github.event_name == 'workflow_dispatch' && inputs.action == 'publish')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Skip quietly when the queue is empty
+        id: q
+        run: |
+          if find instagram/queue -name post.json 2>/dev/null | grep -q .; then
+            echo "has=1" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Publish queued posts
+        if: steps.q.outputs.has == '1'
+        env:
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          python3 instagram/publish.py publish --commit
+
+  refresh-token:
+    if: >-
+      (github.event_name == 'schedule' && github.event.schedule == '0 4 1,15 * *') ||
+      (github.event_name == 'workflow_dispatch' && inputs.action == 'refresh-token')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Renew the token and save it (saving needs the optional GH_SECRETS_PAT secret)
+        env:
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_SECRETS_PAT }}
+          NEW_TOKEN_FILE: ${{ runner.temp }}/ig_token
+        run: |
+          python3 instagram/publish.py refresh-token
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::warning::GH_SECRETS_PAT is not set, so the renewed token was not saved. Make a new token in Meta before day 60 (see instagram/SETUP.md)."
+            exit 0
+          fi
+          gh secret set IG_ACCESS_TOKEN --repo "$GITHUB_REPOSITORY" < "$NEW_TOKEN_FILE"
+          rm -f "$NEW_TOKEN_FILE"
+          echo "Saved the renewed token."
