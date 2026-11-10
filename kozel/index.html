@@ -1,0 +1,556 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kozel Rulebook</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: one reading column of numbered "lessons", each with a visual (cards, table, ladder) beside or under the text; a confirm sheet at the end. */
+:root {
+  --bg: #eef1f4;
+  --surface: #ffffff;
+  --ink: #18212b;
+  --muted: #5a6573;
+  --line: #d3d9e0;
+  --accent: #1f6f5c;      /* card-room green, used sparingly */
+  --accent-soft: #dcefe8;
+  --red: #c0262d;
+  --card: #fffdf8;
+  --card-edge: #c9cfd6;
+  --gold: #b07d12;
+  --gold-soft: #fbf1d9;
+  --font-display: "Rubik", "Segoe UI", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12171d; --surface: #1a212a; --ink: #e7ecf1; --muted: #9aa6b3; --line: #2c3540;
+    --accent: #5cc2a4; --accent-soft: #19362e; --red: #ff6b70; --card: #f4f1ea; --card-edge: #3a4450;
+    --gold: #e5b54a; --gold-soft: #3a2f16; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12171d; --surface: #1a212a; --ink: #e7ecf1; --muted: #9aa6b3; --line: #2c3540;
+  --accent: #5cc2a4; --accent-soft: #19362e; --red: #ff6b70; --card: #f4f1ea; --card-edge: #3a4450;
+  --gold: #e5b54a; --gold-soft: #3a2f16; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 16px; line-height: 1.6;
+}
+.wrap {
+  max-width: 980px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 32px 64px;
+  display: grid; gap: 40px;
+}
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; line-height: 1.15; margin: 0; }
+h1 { font-size: clamp(2.4rem, 7vw, 4rem); font-weight: 800; letter-spacing: -0.02em; }
+h2 { font-size: 1.6rem; font-weight: 700; }
+h3 { font-size: 1.1rem; font-weight: 700; }
+p { margin: 0; max-width: 65ch; }
+.ru { font-family: var(--font-display); font-weight: 500; color: var(--muted); }
+.eyebrow { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.12em; font-weight: 600; color: var(--accent); }
+.muted { color: var(--muted); }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+/* hero */
+.hero { display: grid; grid-template-columns: 1.1fr 1fr; gap: 32px; align-items: center; }
+.hero-text { display: grid; gap: 14px; min-width: 0; }
+.hero .lede { font-size: 1.12rem; }
+.note {
+  border-left: 3px solid var(--gold); background: var(--gold-soft);
+  padding: 10px 14px; border-radius: 0 6px 6px 0; font-size: 0.95rem; max-width: 65ch;
+}
+.fan { position: relative; height: 230px; }
+.fan .card { position: absolute; left: 50%; bottom: 10px; transform-origin: 50% 120%; transition: transform .5s cubic-bezier(.2,.8,.2,1); }
+
+/* cards */
+.card {
+  width: 74px; height: 106px; border-radius: 8px;
+  background: var(--card); border: 1px solid var(--card-edge);
+  box-shadow: 0 1px 2px rgba(0,0,0,.12), 0 4px 10px rgba(0,0,0,.06);
+  color: #18212b; position: relative; flex: none;
+  font-family: var(--font-display); font-weight: 700;
+}
+.card.red { color: #c0262d; }
+.card .c-tl, .card .c-br { position: absolute; line-height: 1; font-size: 15px; text-align: center; }
+.card .c-tl { top: 6px; left: 6px; }
+.card .c-br { bottom: 6px; right: 6px; transform: rotate(180deg); }
+.card .c-tl small, .card .c-br small { display: block; font-size: 13px; }
+.card .c-mid { position: absolute; inset: 0; display: grid; place-items: center; font-size: 34px; }
+.card.face .c-mid { font-size: 26px; }
+.card.trump { box-shadow: 0 0 0 2px var(--gold), 0 4px 10px rgba(0,0,0,.08); }
+.card.sm { width: 54px; height: 78px; border-radius: 6px; }
+.card.sm .c-tl { font-size: 13px; top: 4px; left: 5px; }
+.card.sm .c-br { display: none; }
+.card.sm .c-mid { font-size: 24px; }
+.card.sm.face .c-mid { font-size: 18px; }
+.card.win { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* sections */
+section.lesson { display: grid; gap: 16px; }
+.lesson-head { display: flex; gap: 14px; align-items: baseline; flex-wrap: wrap; }
+.num { font-family: var(--font-mono); color: var(--accent); font-size: 0.95rem; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 20px; min-width: 0; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+.two > * { min-width: 0; }
+
+.facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.fact { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: grid; gap: 2px; }
+.fact b { font-family: var(--font-display); font-size: 1.9rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.fact span { font-size: 0.9rem; color: var(--muted); }
+
+/* seating */
+.table-svg { width: 100%; max-width: 360px; height: auto; display: block; margin: 0 auto; }
+
+/* ladder */
+.ladder { display: flex; gap: 8px; overflow-x: auto; padding: 6px 4px 12px; }
+.rung { display: grid; justify-items: center; gap: 6px; flex: none; }
+.rung .rank { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.ladder-legend { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--muted); }
+.group-tag { display: inline-block; font-size: 0.8rem; padding: 2px 8px; border-radius: 999px; background: var(--gold-soft); color: var(--ink); border: 1px solid var(--gold); }
+
+.toggle { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--surface); flex-wrap: wrap; }
+.toggle button {
+  font: inherit; font-size: 0.9rem; padding: 7px 12px; border: 0; background: transparent; color: var(--ink); cursor: pointer;
+}
+.toggle button[aria-pressed="true"] { background: var(--accent); color: var(--surface); }
+.toggle button:focus-visible, .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* points */
+.points { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.points td, .points th { padding: 8px 6px; border-bottom: 1px solid var(--line); text-align: left; }
+.points th { font-size: 0.8rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; }
+.points td.v { font-family: var(--font-mono); text-align: right; font-size: 1.05rem; }
+.points tr.total td { border-bottom: 0; font-weight: 600; }
+.points .bar { height: 8px; background: var(--accent); border-radius: 4px; }
+
+/* trick demo */
+.trick { display: grid; grid-template-columns: 1fr 1.1fr; gap: 20px; align-items: center; }
+.felt {
+  position: relative; aspect-ratio: 1 / 1; max-width: 340px; width: 100%; margin: 0 auto;
+  border-radius: 50%; background: var(--accent-soft); border: 1px solid var(--line);
+}
+.seat { position: absolute; font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; }
+.seat.us { color: var(--accent); }
+.seat.them { color: var(--red); }
+.seat.s { bottom: 4px; left: 50%; transform: translateX(-50%); }
+.seat.n { top: 4px; left: 50%; transform: translateX(-50%); }
+.seat.w { left: 6px; top: 50%; transform: translateY(-50%); }
+.seat.e { right: 6px; top: 50%; transform: translateY(-50%); }
+.slot { position: absolute; transition: opacity .35s, transform .35s; }
+.slot.s { left: 50%; top: 62%; transform: translateX(-50%); }
+.slot.n { left: 50%; top: 13%; transform: translateX(-50%); }
+.slot.w { left: 17%; top: 37%; }
+.slot.e { right: 17%; top: 37%; }
+.slot.off { opacity: 0; transform: translateX(-50%) scale(.9); }
+.slot.w.off, .slot.e.off { transform: scale(.9); }
+.steps { display: grid; gap: 12px; }
+.step-text { min-height: 7.5em; }
+.controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.btn {
+  font: inherit; font-weight: 600; font-size: 0.95rem; padding: 8px 16px; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--accent); background: var(--accent); color: var(--surface);
+}
+.btn.ghost { background: transparent; color: var(--accent); }
+.btn:disabled { opacity: .45; cursor: default; }
+.dots { display: flex; gap: 6px; }
+.dots i { width: 8px; height: 8px; border-radius: 50%; background: var(--line); }
+.dots i.on { background: var(--accent); }
+
+/* rules list */
+.rules { display: grid; gap: 12px; padding: 0; margin: 0; list-style: none; counter-reset: r; }
+.rules li { display: grid; grid-template-columns: 28px 1fr; gap: 10px; }
+.rules li::before { counter-increment: r; content: counter(r); font-family: var(--font-mono); color: var(--accent); font-weight: 500; }
+.gotcha { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+.gotcha .hand { display: flex; gap: 6px; }
+
+/* scoring */
+.tiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.tier { border: 1px solid var(--line); border-radius: 10px; padding: 14px; background: var(--surface); display: grid; gap: 6px; align-content: start; }
+.tier .pts { font-family: var(--font-display); font-size: 1.6rem; font-weight: 800; color: var(--red); }
+.pad { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; min-width: 460px; }
+.pad th, .pad td { padding: 8px 10px; border-bottom: 1px dashed var(--line); text-align: center; }
+.pad th { font-size: 0.8rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.pad td:first-child, .pad th:first-child { text-align: left; }
+.pad .goat { color: var(--red); font-weight: 700; }
+.scroll { overflow-x: auto; }
+.tally { font-family: var(--font-mono); letter-spacing: 1px; }
+
+/* confirm sheet */
+.qs { display: grid; gap: 14px; }
+.q { display: grid; gap: 8px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.q:last-child { border-bottom: 0; }
+.q label { display: flex; gap: 8px; align-items: flex-start; cursor: pointer; }
+.q input { margin-top: 5px; accent-color: var(--accent); }
+.q .mine { font-size: 0.75rem; color: var(--accent); font-weight: 600; text-transform: uppercase; letter-spacing: .08em; margin-left: 4px; }
+textarea {
+  width: 100%; min-height: 9em; font-family: var(--font-mono); font-size: 0.85rem; padding: 12px;
+  border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); resize: vertical;
+}
+.copied { color: var(--accent); font-weight: 600; font-size: 0.9rem; }
+
+footer { font-size: 0.85rem; color: var(--muted); display: grid; gap: 4px; }
+footer a { color: var(--accent); }
+
+@media (max-width: 760px) {
+  .hero, .two, .trick { grid-template-columns: 1fr; }
+  .facts { grid-template-columns: repeat(2, 1fr); }
+  .tiers { grid-template-columns: 1fr; }
+  .fan { height: 200px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+/* v3 additions */
+.stock { position: relative; width: 210px; height: 140px; margin: 0 auto; }
+.stock .back, .card.back {
+  border-radius: 8px; border: 1px solid var(--card-edge);
+  background: repeating-linear-gradient(45deg, var(--accent) 0 6px, var(--accent-soft) 6px 12px);
+}
+.stock .back { position: absolute; width: 74px; height: 106px; }
+.stock .up { position: absolute; left: 96px; top: 20px; transform: rotate(90deg); }
+.stock .hid { position: absolute; left: 118px; top: 16px; transform: rotate(90deg); width: 74px; height: 106px; }
+.stock .lbl { position: absolute; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.card.back.sm { width: 54px; height: 78px; border-radius: 6px; }
+.flag { display: inline-block; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); border: 1px solid var(--accent); color: var(--ink); }
+.timeline { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.tl { border: 1px solid var(--line); border-radius: 10px; padding: 14px; background: var(--surface); display: grid; gap: 8px; align-content: start; }
+.tl .when { font-family: var(--font-mono); font-size: 0.8rem; color: var(--accent); }
+.duel { display: grid; gap: 10px; }
+.duel .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; min-height: 90px; }
+.duel .who { width: 84px; font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); flex: none; }
+.duel .pair { display: grid; gap: 4px; justify-items: center; }
+.duel .slotc { transition: opacity .3s, transform .3s; }
+.duel .slotc.off { opacity: 0; transform: translateY(6px); }
+.thr { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; min-width: 460px; }
+.thr th, .thr td { padding: 9px 10px; border-bottom: 1px solid var(--line); text-align: left; }
+.thr th { font-size: 0.8rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; }
+.thr td.p { font-family: var(--font-display); font-weight: 800; color: var(--red); }
+.final { columns: 2 320px; column-gap: 32px; padding-left: 1.2em; margin: 0; }
+.final li { break-inside: avoid; margin-bottom: 8px; }
+@media (max-width: 760px) { .timeline { grid-template-columns: 1fr; } }
+</style>
+</head><body>
+
+<main class="wrap">
+
+  <header class="hero">
+    <div class="hero-text">
+      <span class="eyebrow">Russian card game · 2 to 4 players · 36 cards</span>
+      <h1>Kozel <span class="ru">«Козёл»</span></h1>
+      <p class="lede">The full rules as you explained them, question by question. Draw 4 cards, lead one or several cards of one suit, beat them card by card, and don't collect 12 bad points, or you're the goat.</p>
+      <p><a class="btn" href="play.html" style="display:inline-block;text-decoration:none">Play Kozel online</a></p>
+      <p class="note"><strong>Confirmed with you</strong> through 31 questions. Anything that still looks wrong, tell me and I'll fix it.</p>
+    </div>
+    <div class="fan" id="fan" aria-label="Four hearts fanned out: four trumps"></div>
+  </header>
+
+  <div class="facts">
+    <div class="fact"><b>2–4</b><span>players: 2 or 3 alone, 4 alone or in two pairs.</span></div>
+    <div class="fact"><b>4</b><span>cards in hand. Draw back up to 4 after every turn.</span></div>
+    <div class="fact"><b>120</b><span>card points in the deck.</span></div>
+    <div class="fact"><b>12</b><span>bad points and you're the goat <span class="ru">(козёл)</span>.</span></div>
+  </div>
+
+  <section class="panel" style="display:grid;gap:8px">
+    <h3>Three words used on this page</h3>
+    <div class="timeline">
+      <div class="tl"><span class="when">ВЗЯТКА · turn</span><p>One player puts cards down, the others answer, and someone takes all the cards.</p></div>
+      <div class="tl"><span class="when">РАЗДАЧА · deal</span><p>From dealing until all 36 cards are played. Card points are counted at the end.</p></div>
+      <div class="tl"><span class="when">ПАРТИЯ · game</span><p>Many deals, until someone reaches 12 bad points and becomes the goat.</p></div>
+    </div>
+  </section>
+
+  <!-- 1 -->
+  <section class="lesson">
+    <div class="lesson-head"><span class="num">01</span><h2>Who plays and who starts</h2><span class="ru">игроки</span></div>
+    <div class="two">
+      <div class="panel" style="display:grid;gap:14px;justify-items:center">
+        <div class="toggle" role="group" aria-label="Number of players">
+          <button type="button" data-players="2" aria-pressed="true">2</button>
+          <button type="button" data-players="3" aria-pressed="false">3</button>
+          <button type="button" data-players="4t" aria-pressed="false">4 · pairs</button>
+          <button type="button" data-players="4s" aria-pressed="false">4 · solo</button>
+        </div>
+        <svg class="table-svg" id="seats" viewBox="0 0 320 280" role="img" aria-label="Seating around the table"></svg>
+      </div>
+      <div class="panel" style="display:grid;gap:10px" id="seat-text"></div>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section class="lesson">
+    <div class="lesson-head"><span class="num">02</span><h2>Two cards under the deck</h2><span class="ru">козырь и скрытая карта</span></div>
+    <p>Deal 4 cards to everyone. Then two special cards go under the deck: one <strong>face up</strong>, which sets the trump <span class="ru">(козырь)</span>, and one <strong>hidden</strong> at the very bottom, which can change the trump at the end.</p>
+    <div class="two">
+      <div class="panel" style="display:grid;gap:12px;justify-items:center">
+        <div class="stock" id="stock" aria-label="Deck with a face-up trump card and a hidden card underneath"></div>
+        <div class="controls">
+          <button type="button" class="btn ghost" id="reveal">Reveal hidden card</button>
+        </div>
+        <p class="muted" id="trump-now" style="text-align:center"></p>
+      </div>
+      <div class="timeline" style="grid-template-columns:1fr">
+        <div class="tl"><span class="when">START OF THE DEAL</span><p>The face-up card's suit is trump. With 9♥ there, <strong>every heart beats every card of the other suits</strong>.</p></div>
+        <div class="tl"><span class="when">SECOND-TO-LAST CARD</span><p>The face-up 9♥ is drawn like a normal card into someone's hand.</p></div>
+        <div class="tl"><span class="when">LAST CARD</span><p>Whoever draws the hidden card <strong>shows it right away</strong>. Its suit is the new trump for the rest of the deal. If it's also a heart, nothing changes.</p></div>
+      </div>
+    </div>
+    <div class="panel" style="display:grid;gap:12px">
+      <div class="controls" style="justify-content:space-between">
+        <h3 id="trump-title">Trumps</h3>
+        <span class="group-tag">Highest on the left</span>
+      </div>
+      <div class="ladder" id="ladder"></div>
+      <h3>Every other suit</h3>
+      <div class="ladder" id="plain"></div>
+      <p class="muted">Same order in every suit: <strong>A, 10, K, Q, J, 9, 8, 7, 6</strong>. The 10 beats the king.</p>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section class="lesson">
+    <div class="lesson-head"><span class="num">03</span><h2>Card points</h2><span class="ru">очки</span></div>
+    <div class="two">
+      <div class="panel">
+        <table class="points">
+          <thead><tr><th>Card</th><th></th><th style="text-align:right">Points</th></tr></thead>
+          <tbody id="points"></tbody>
+        </table>
+      </div>
+      <div class="panel" style="display:grid;gap:10px">
+        <p>Points don't depend on suit or on being a trump.</p>
+        <p class="mono" style="font-size:.95rem">11 + 10 + 4 + 3 + 2 = 30 per suit<br>30 × 4 suits = <strong>120</strong></p>
+        <p>The winner of a turn takes <strong>all</strong> the cards on the table, including face-down ones, with their points.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section class="lesson">
+    <div class="lesson-head"><span class="num">04</span><h2>Playing a turn</h2><span class="ru">как ходить и бить</span></div>
+    <ol class="rules panel">
+      <li><span><strong>Lead 1 to 4 cards of the same suit</strong>, for example 7♠ A♠. Trumps can be led too (all trumps).</span></li>
+      <li><span><strong>The next player answers with the same number of cards.</strong> To win, they beat each card one by one, with a higher card of the same suit <em>or</em> any trump. They choose which.</span></li>
+      <li><span>If they can't beat every card, or don't want to, they put the same number of cards down <strong>face down</strong>. They lose the turn, and those cards go to the winner.</span></li>
+      <li><span>With 3 or 4 players, each next player must beat the cards that are <strong>currently winning</strong>, not the first ones.</span></li>
+      <li><span>In pairs, if your partner is already winning, you can throw face down. Throwing high-point cards gives your team the points.</span></li>
+      <li><span>The winner takes all the cards. Then <strong>the winner draws first</strong> and the others draw clockwise back up to 4. The winner leads next.</span></li>
+      <li><span>Near the end, if there aren't enough cards for everyone to reach 4, the remaining cards are split evenly.</span></li>
+    </ol>
+
+    <div class="panel trick">
+      <div class="duel" id="duel">
+        <div class="row"><span class="who">You lead</span><div class="row" id="row-lead" style="min-height:0"></div></div>
+        <div class="row"><span class="who">Ali answers</span><div class="row" id="row-ans" style="min-height:0"></div></div>
+      </div>
+      <div class="steps">
+        <div class="toggle" role="group" aria-label="Choose example">
+          <button type="button" data-ex="0" aria-pressed="true">Beats both</button>
+          <button type="button" data-ex="1" aria-pressed="false">Can't beat</button>
+        </div>
+        <span class="eyebrow">Example · 2 players · hearts are trump</span>
+        <p class="step-text" id="step-text"></p>
+        <div class="controls">
+          <button type="button" class="btn ghost" id="prev">Back</button>
+          <button type="button" class="btn" id="next">Next</button>
+          <div class="dots" id="dots" aria-hidden="true"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel gotcha">
+      <div class="hand" id="four"></div>
+      <div style="flex:1;min-width:240px;display:grid;gap:6px">
+        <h3>Four trumps <span class="ru">(четыре козыря)</span></h3>
+        <p>If you hold 4 trumps, you may put all four down <strong>at any moment</strong>, even out of turn or in the middle of someone else's turn. It's optional.</p>
+        <p>Any cards already led go back to their owners' hands. Everyone else must answer your 4 trumps: beat them card by card with higher trumps, or throw 4 cards face down.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section class="lesson">
+    <div class="lesson-head"><span class="num">05</span><h2>End of a deal: bad points</h2><span class="ru">штрафные очки</span></div>
+    <p>When all cards are played, everyone (or each pair) counts their card points. Below the safe line you get bad points. <strong>Whoever reaches 12 first loses the game and is the goat.</strong></p>
+    <div class="panel scroll">
+      <table class="thr">
+        <thead><tr><th>Players</th><th>Safe</th><th>+2</th><th>+4</th><th>+6</th></tr></thead>
+        <tbody>
+          <tr><td>2 players, or 2 pairs</td><td>61 or more</td><td>31–60</td><td>30 or less</td><td rowspan="3" style="vertical-align:middle">took <strong>no cards</strong> at all</td></tr>
+          <tr><td>3 players</td><td>40 or more</td><td>20–39</td><td>under 20</td></tr>
+          <tr><td>4 players, solo</td><td>30 or more</td><td>15–29</td><td>under 15</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note"><strong>60 : 60 is "eggs"</strong> <span class="ru">(«яйца»)</span>. Nobody gets bad points this deal, but in the next deal <strong>everything is doubled</strong>: +2 becomes +4, +4 becomes +8, and +6 becomes +12.</p>
+    <div class="panel scroll">
+      <table class="pad">
+        <thead><tr><th>Deal</th><th>Team A pile</th><th>Team B pile</th><th>Bad points</th><th>A total</th><th>B total</th></tr></thead>
+        <tbody id="pad"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- summary -->
+  <section class="lesson" id="confirm">
+    <div class="lesson-head"><span class="num">✓</span><h2>All the rules on one card</h2></div>
+    <div class="panel">
+      <ol class="final">
+        <li>36 cards, 6 to Ace. Order: A, 10, K, Q, J, 9, 8, 7, 6.</li>
+        <li>2, 3 or 4 players. With 4: two pairs (partners opposite) or everyone alone.</li>
+        <li>Deal 4 cards each. Under the deck: one face-up card (trump) and one hidden card at the very bottom.</li>
+        <li>Trump beats all other suits. The face-up card is drawn second-to-last.</li>
+        <li>The hidden card is drawn last and shown right away. Its suit becomes the new trump.</li>
+        <li>Lead 1–4 cards of one suit (trumps allowed).</li>
+        <li>Answer with the same number of cards: beat each one (higher same suit or any trump, your choice) or throw face down.</li>
+        <li>Beating is optional. Later players must beat whatever is currently winning.</li>
+        <li>Winner takes all cards, including face-down ones, draws first, and leads next.</li>
+        <li>Four trumps can be played at any moment, optionally. Others must beat them or throw face down.</li>
+        <li>Card points: A 11, 10 10, K 4, Q 3, J 2, others 0. Total 120.</li>
+        <li>Bad points by player count (see table). No cards at all = +6.</li>
+        <li>60 : 60 = eggs. The next deal's bad points are doubled.</li>
+        <li>First to 12 bad points is the goat.</li>
+        <li>Each game starts with a colour or suit pick and a random card to decide who goes first. After that, the winner of the last turn starts.</li>
+      </ol>
+    </div>
+  </section>
+
+  <footer>
+    <p>Rules written from your answers. Next step: a playable version where the site deals the cards.</p>
+  </footer>
+</main>
+
+<script>
+(function () {
+  const RED = s => s === "♥" || s === "♦";
+  const FACE = r => r === "J" || r === "Q" || r === "K";
+  const ORDER = ["A","10","K","Q","J","9","8","7","6"];
+  const NAMES = { "♠": "spades", "♥": "hearts", "♦": "diamonds", "♣": "clubs" };
+  function cardHTML(c, sm, isTrump) {
+    if (c === "back") return `<div class="card back ${sm ? "sm" : ""}" aria-label="face-down card"></div>`;
+    const s = c.slice(-1), r = c.slice(0, -1);
+    const cls = ["card", sm ? "sm" : "", RED(s) ? "red" : "", FACE(r) ? "face" : "", isTrump ? "trump" : ""].join(" ");
+    const mid = FACE(r) ? r + s : s;
+    return `<div class="${cls}" aria-label="${c}${isTrump ? " (trump)" : ""}"><span class="c-tl">${r}<small>${s}</small></span><span class="c-mid">${mid}</span><span class="c-br">${r}<small>${s}</small></span></div>`;
+  }
+
+  const fan = document.getElementById("fan");
+  fan.innerHTML = ["6♥", "J♥", "A♥", "10♥"].map(c => cardHTML(c, false, true)).join("");
+  [...fan.children].forEach((el, i) => {
+    const k = i - 1.5;
+    el.style.transform = `translateX(-50%) rotate(${k * 15}deg) translateY(${Math.abs(k) * 4}px) scale(1.15)`;
+  });
+  document.getElementById("four").innerHTML = ["6♥", "9♥", "J♥", "A♥"].map(c => cardHTML(c, true, true)).join("");
+
+  // seating
+  const colors = { a: "var(--accent)", b: "var(--red)", c: "var(--gold)", d: "var(--muted)" };
+  const seatInfo = {
+    "2": { seats: [[160, 250, "P1", "a"], [160, 30, "P2", "b"]],
+      text: ["Two players face to face, each for themselves.", "<strong>Who starts the game:</strong> each picks <strong>red</strong> or <strong>black</strong>. The site turns a random card, and whoever picked its colour goes first."] },
+    "3": { seats: [[160, 250, "P1", "a"], [40, 70, "P2", "b"], [280, 70, "P3", "c"]],
+      text: ["Three players, each for themselves. Play goes clockwise.", "<strong>Who starts the game:</strong> each picks a <strong>suit</strong>. The last to pick gets the two remaining suits. A random card decides."] },
+    "4t": { seats: [[160, 250, "S", "a"], [28, 140, "W", "b"], [160, 30, "N", "a"], [292, 140, "E", "b"]], teams: true,
+      text: ["Two pairs. Partners sit opposite and share one pile.", "<strong>Who starts the game:</strong> each team picks a <strong>colour</strong>, red or black. A random card decides."] },
+    "4s": { seats: [[160, 250, "P1", "a"], [28, 140, "P2", "b"], [160, 30, "P3", "c"], [292, 140, "P4", "d"]],
+      text: ["Four players, each for themselves.", "<strong>Who starts the game:</strong> each picks a <strong>suit</strong>. A random card decides."] }
+  };
+  function drawSeats(n) {
+    const info = seatInfo[n];
+    let svg = `<ellipse cx="160" cy="140" rx="110" ry="90" fill="var(--accent-soft)" stroke="var(--line)"/>`;
+    if (info.teams) svg += `<line x1="160" y1="70" x2="160" y2="210" stroke="var(--accent)" stroke-width="2" stroke-dasharray="5 5"/><line x1="70" y1="140" x2="250" y2="140" stroke="var(--red)" stroke-width="2" stroke-dasharray="5 5"/>
+      <text x="200" y="100" fill="var(--accent)" font-size="13" font-weight="600" font-family="IBM Plex Sans, sans-serif">Team A</text><text x="200" y="168" fill="var(--red)" font-size="13" font-weight="600" font-family="IBM Plex Sans, sans-serif">Team B</text>`;
+    svg += info.seats.map(([x, y, l, c]) => `<circle cx="${x}" cy="${y}" r="21" fill="${colors[c]}"/><text x="${x}" y="${y + 5}" fill="var(--surface)" font-size="13" font-weight="600" text-anchor="middle" font-family="IBM Plex Sans, sans-serif">${l}</text>`).join("");
+    document.getElementById("seats").innerHTML = svg;
+    document.getElementById("seat-text").innerHTML = info.text.map(t => `<p>${t}</p>`).join("") +
+      `<p class="muted">Inside a deal, whoever won the last turn goes first.</p>`;
+    document.querySelectorAll("[data-players]").forEach(b => b.setAttribute("aria-pressed", b.dataset.players === n));
+  }
+  document.querySelectorAll("[data-players]").forEach(b => b.onclick = () => drawSeats(b.dataset.players));
+  drawSeats("2");
+
+  // trump + hidden card
+  let revealed = false;
+  function drawTrump() {
+    const s = revealed ? "♣" : "♥";
+    const backs = [0, 1, 2, 3].map(i => `<div class="back" style="left:${i * 2}px;top:${16 - i * 2}px"></div>`).join("");
+    const hid = revealed ? `<div class="hid" style="background:none;border:0">${cardHTML("7♣", false, true)}</div>` : `<div class="hid back"></div>`;
+    document.getElementById("stock").innerHTML = hid + `<div class="up">${cardHTML("9♥", false, !revealed)}</div>` + backs;
+    document.getElementById("trump-now").innerHTML = revealed
+      ? "The last card was 7♣. <strong>Clubs are now trump</strong> until the deal ends."
+      : "Face-up 9♥, so <strong>hearts are trump</strong>. The hidden card waits at the very bottom.";
+    document.getElementById("reveal").textContent = revealed ? "Reset" : "Reveal hidden card";
+    document.getElementById("ladder").innerHTML = ORDER.map((r, i) => `<div class="rung">${cardHTML(r + s, true, true)}<span class="rank">${i + 1}</span></div>`).join("");
+    document.getElementById("plain").innerHTML = ORDER.map((r, i) => `<div class="rung">${cardHTML(r + "♠", true, false)}<span class="rank">${i + 1}</span></div>`).join("");
+    document.getElementById("trump-title").textContent = `Trumps right now: ${NAMES[s]} ${s}`;
+  }
+  document.getElementById("reveal").onclick = () => { revealed = !revealed; drawTrump(); };
+  drawTrump();
+
+  // points
+  const pts = [["Ace", 11], ["10", 10], ["King", 4], ["Queen", 3], ["Jack", 2], ["9, 8, 7, 6", 0]];
+  document.getElementById("points").innerHTML = pts.map(([n, v]) =>
+    `<tr><td>${n}</td><td style="width:45%"><div class="bar" style="width:${v / 11 * 100}%"></div></td><td class="v">${v}</td></tr>`
+  ).join("") + `<tr class="total"><td>Whole deck</td><td></td><td class="v">120</td></tr>`;
+
+  // turn examples
+  const examples = [
+    { lead: ["7♠", "A♠"], ans: ["9♠", "6♥"], winAns: true, steps: [
+      "You lead two spades at once: <strong>7♠ and A♠</strong>. Ali must answer with 2 cards.",
+      "Ali beats <strong>7♠ with 9♠</strong>, a higher card of the same suit.",
+      "Ali beats <strong>A♠ with 6♥</strong>. Hearts are trump, so even the 6 beats the ace.",
+      "Ali beat both cards and takes all 4: 0 + 11 + 0 + 0 = <span class='mono'>11</span> points. Ali draws first, then you, and Ali leads next." ] },
+    { lead: ["K♦", "10♦"], ans: ["back", "back"], winAns: false, steps: [
+      "You lead <strong>K♦ and 10♦</strong>. Ali has only one higher diamond (A♦) and no trumps.",
+      "Ali can beat only one card, not both, so Ali puts <strong>one card face down</strong>…",
+      "…and a <strong>second card face down</strong>. Ali could also do this on purpose to save good cards.",
+      "You win the turn and take all 4 cards, including Ali's face-down ones and their points. You draw first and lead again." ] }
+  ];
+  let ex = 0, step = 0;
+  const dots = document.getElementById("dots");
+  function renderEx() {
+    const e = examples[ex];
+    dots.innerHTML = e.steps.map((_, i) => `<i class="${i <= step ? "on" : ""}"></i>`).join("");
+    document.getElementById("step-text").innerHTML = e.steps[step];
+    const done = step === e.steps.length - 1;
+    document.getElementById("row-lead").innerHTML = e.lead.map(c => `<div class="slotc">${cardHTML(c, false, c.endsWith("♥"))}</div>`).join("");
+    document.getElementById("row-ans").innerHTML = e.ans.map((c, i) => `<div class="slotc ${i < step ? "" : "off"}">${cardHTML(c, false, c.endsWith("♥"))}</div>`).join("");
+    const winRow = done ? (e.winAns ? "row-ans" : "row-lead") : null;
+    if (winRow) document.querySelectorAll(`#${winRow} .card`).forEach(c => c.classList.add("win"));
+    document.getElementById("prev").disabled = step === 0;
+    document.getElementById("next").textContent = done ? "Again" : "Next";
+    document.querySelectorAll("[data-ex]").forEach(b => b.setAttribute("aria-pressed", +b.dataset.ex === ex));
+  }
+  document.getElementById("next").onclick = () => { step = step === examples[ex].steps.length - 1 ? 0 : step + 1; renderEx(); };
+  document.getElementById("prev").onclick = () => { if (step > 0) { step--; renderEx(); } };
+  document.querySelectorAll("[data-ex]").forEach(b => b.onclick = () => { ex = +b.dataset.ex; step = 0; renderEx(); });
+  renderEx();
+
+  // score pad (2 pairs)
+  const deals = [[72, 48], [35, 85], [60, 60], [94, 26], [41, 79], [120, 0]];
+  let A = 0, B = 0, eggs = false, rows = "";
+  const tally = n => "|".repeat(Math.min(n, 20));
+  deals.forEach(([a, b], i) => {
+    let pen;
+    if (a === 60) { pen = "Eggs: nobody, next deal ×2"; eggs = true; }
+    else {
+      const loser = a < b ? "A" : "B", lp = Math.min(a, b);
+      let p = lp === 0 ? 6 : lp <= 30 ? 4 : 2;
+      if (eggs) { p *= 2; eggs = false; }
+      if (loser === "A") A += p; else B += p;
+      pen = `${loser} +${p}${lp === 0 ? " (no cards)" : ""}`;
+    }
+    rows += `<tr><td>${i + 1}</td><td class="mono">${a}</td><td class="mono">${b}</td><td>${pen}</td>
+      <td class="${A >= 12 ? "goat" : ""}"><span class="mono">${A}</span> <span class="tally muted">${tally(A)}</span></td>
+      <td class="${B >= 12 ? "goat" : ""}"><span class="mono">${B}</span> <span class="tally muted">${tally(B)}</span></td></tr>`;
+  });
+  rows += `<tr><td colspan="6" class="muted" style="text-align:left">Example with 2 pairs. Deal 4 comes after eggs, so B's +4 becomes +8. Team B passes 12, so <span class="goat">Team B are the goats</span>.</td></tr>`;
+  document.getElementById("pad").innerHTML = rows;
+})();
+</script>
+</body></html>

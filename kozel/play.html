@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kozel Online</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: a single card-table column; status + actions sit right above your hand so the next move is always in view. */
+:root {
+  --bg: #eef1f4; --surface: #ffffff; --ink: #18212b; --muted: #5a6573; --line: #d3d9e0;
+  --accent: #1f6f5c; --accent-soft: #dcefe8; --red: #c0262d; --card: #fffdf8; --card-edge: #c9cfd6;
+  --gold: #b07d12; --gold-soft: #fbf1d9; --felt: #2c6e5a; --felt-ink: #eaf5f0;
+  --font-display: "Rubik", "Segoe UI", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12171d; --surface: #1a212a; --ink: #e7ecf1; --muted: #9aa6b3; --line: #2c3540;
+    --accent: #5cc2a4; --accent-soft: #19362e; --red: #ff6b70; --card: #f4f1ea; --card-edge: #3a4450;
+    --gold: #e5b54a; --gold-soft: #3a2f16; --felt: #183f34; --felt-ink: #e3f1ec; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12171d; --surface: #1a212a; --ink: #e7ecf1; --muted: #9aa6b3; --line: #2c3540;
+  --accent: #5cc2a4; --accent-soft: #19362e; --red: #ff6b70; --card: #f4f1ea; --card-edge: #3a4450;
+  --gold: #e5b54a; --gold-soft: #3a2f16; --felt: #183f34; --felt-ink: #e3f1ec; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 16px; line-height: 1.5; }
+[hidden] { display: none !important; }
+.wrap {
+  max-width: 960px; margin: 0 auto; padding-block: 20px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 18px;
+}
+h1, h2, h3 { font-family: var(--font-display); margin: 0; line-height: 1.15; text-wrap: balance; }
+h1 { font-size: clamp(2rem, 6vw, 3rem); font-weight: 800; letter-spacing: -0.02em; }
+h2 { font-size: 1.3rem; }
+h3 { font-size: 1rem; }
+p { margin: 0; }
+a { color: var(--accent); }
+.muted { color: var(--muted); }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.eyebrow { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.12em; font-weight: 600; color: var(--accent); }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px; display: grid; gap: 12px; min-width: 0; }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid2 > * { min-width: 0; }
+label.lbl { font-size: 0.85rem; font-weight: 600; color: var(--muted); }
+input[type=text] {
+  font: inherit; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); width: 100%;
+}
+input.code { font-family: var(--font-mono); font-size: 1.3rem; letter-spacing: .3em; text-transform: uppercase; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; flex-wrap: wrap; background: var(--surface); }
+.seg button { font: inherit; font-size: .92rem; padding: 8px 12px; border: 0; background: transparent; color: var(--ink); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--surface); }
+.btn {
+  font: inherit; font-weight: 600; font-size: .95rem; padding: 10px 18px; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--accent); background: var(--accent); color: var(--surface);
+}
+.btn.ghost { background: transparent; color: var(--accent); }
+.btn.gold { background: var(--gold); border-color: var(--gold); color: #1b1405; }
+.btn:disabled { opacity: .4; cursor: default; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* home */
+.hero { display: grid; gap: 6px; }
+.bigcode { font-family: var(--font-mono); font-size: clamp(2.2rem, 10vw, 3.4rem); letter-spacing: .25em; font-weight: 500; color: var(--accent); }
+.seats { display: grid; gap: 8px; }
+.seat { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; gap: 8px; }
+.seat .tag { font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; }
+.warn { border-left: 3px solid var(--gold); background: var(--gold-soft); padding: 10px 12px; border-radius: 0 8px 8px 0; font-size: .92rem; }
+
+/* cards */
+.card {
+  width: 64px; height: 92px; border-radius: 8px; background: var(--card); border: 1px solid var(--card-edge);
+  box-shadow: 0 1px 2px rgba(0,0,0,.12), 0 3px 8px rgba(0,0,0,.06); color: #18212b; position: relative; flex: none;
+  font-family: var(--font-display); font-weight: 700; user-select: none;
+}
+.card.red { color: #c0262d; }
+.card .c-tl { position: absolute; top: 5px; left: 6px; line-height: 1; font-size: 14px; text-align: center; }
+.card .c-tl small { display: block; font-size: 12px; }
+.card .c-mid { position: absolute; inset: 0; display: grid; place-items: center; font-size: 30px; }
+.card.face .c-mid { font-size: 22px; }
+.card.trump { box-shadow: 0 0 0 2px var(--gold), 0 3px 8px rgba(0,0,0,.08); }
+.card.back { background: repeating-linear-gradient(45deg, var(--accent) 0 6px, var(--accent-soft) 6px 12px); }
+.card.sm { width: 42px; height: 60px; border-radius: 6px; }
+.card.sm .c-tl { font-size: 12px; top: 3px; left: 4px; }
+.card.sm .c-tl small { font-size: 11px; }
+.card.sm .c-mid { font-size: 18px; padding-top: 10px; }
+.card.sm.face .c-mid { font-size: 14px; }
+.card.xs { width: 22px; height: 32px; border-radius: 4px; }
+
+/* game */
+.topbar { display: flex; gap: 12px; align-items: stretch; flex-wrap: wrap; }
+.chip { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; display: grid; gap: 2px; min-width: 0; }
+.chip .k { font-size: .7rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); font-weight: 600; }
+.chip .v { font-family: var(--font-display); font-weight: 700; font-size: 1.05rem; }
+.trumpv { font-size: 1.5rem !important; line-height: 1; }
+.trumpv.red { color: var(--red); }
+.stockw { display: flex; gap: 6px; align-items: center; }
+.scores { display: flex; gap: 8px; flex-wrap: wrap; flex: 1; }
+.score { flex: 1; min-width: 120px; }
+.score .bar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.score .bar i { display: block; height: 100%; background: var(--red); }
+.score.mine .v { color: var(--accent); }
+
+.opps { display: flex; gap: 10px; flex-wrap: wrap; }
+.opp { flex: 1; min-width: 140px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: grid; gap: 6px; }
+.opp.turn { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+.opp .nm { font-weight: 600; display: flex; justify-content: space-between; gap: 6px; }
+.opp .backs { display: flex; gap: 3px; }
+.side-a { color: var(--accent); } .side-b { color: var(--red); }
+
+.table { background: var(--felt); color: var(--felt-ink); border-radius: 16px; padding: 16px; min-height: 200px; display: grid; gap: 10px; align-content: start; }
+.table .head { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: .85rem; opacity: .9; }
+.play { display: flex; gap: 10px; align-items: center; padding: 6px 8px; border-radius: 10px; }
+.play.win { background: rgba(255,255,255,.12); outline: 2px solid var(--gold); }
+.play .who { width: 92px; flex: none; font-size: .8rem; font-weight: 600; display: grid; }
+.play .who small { font-weight: 500; opacity: .8; text-transform: uppercase; letter-spacing: .08em; font-size: .68rem; }
+.play .cards { display: flex; gap: 6px; flex-wrap: wrap; }
+.empty-table { opacity: .85; font-size: .95rem; display: grid; gap: 8px; }
+
+.status { font-weight: 600; font-size: 1.02rem; }
+.status.mine { color: var(--accent); }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.hand { display: flex; gap: 8px; flex-wrap: wrap; padding-top: 14px; min-height: 120px; }
+.hand .card { cursor: pointer; transition: transform .15s; width: 72px; height: 104px; }
+.hand .card .c-mid { font-size: 34px; }
+.hand .card.face .c-mid { font-size: 25px; }
+.hand .card.sel { transform: translateY(-14px); box-shadow: 0 0 0 3px var(--accent), 0 6px 14px rgba(0,0,0,.18); }
+.hand.off .card { cursor: default; }
+
+.log { font-size: .85rem; color: var(--muted); display: grid; gap: 3px; max-height: 180px; overflow: auto; }
+details summary { cursor: pointer; font-weight: 600; }
+
+/* overlays */
+.overlay { position: fixed; inset: 0; background: rgba(10,14,18,.55); display: grid; place-items: center; z-index: 20;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.modal { background: var(--surface); color: var(--ink); border-radius: 14px; padding: 22px; width: min(520px, 100%); display: grid; gap: 14px; max-height: 100%; overflow: auto; }
+.opts { display: flex; gap: 10px; flex-wrap: wrap; }
+.opt { font: inherit; font-family: var(--font-display); font-size: 1.6rem; font-weight: 700; width: 74px; height: 74px; border-radius: 12px; border: 2px solid var(--line); background: var(--bg); color: var(--ink); cursor: pointer; }
+.opt.red { color: var(--red); }
+.opt.wide { width: auto; padding: 0 18px; font-size: 1.05rem; }
+.res { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.res th, .res td { padding: 8px 6px; border-bottom: 1px solid var(--line); text-align: left; }
+.res th { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.res td.n { font-family: var(--font-mono); text-align: right; }
+.res td.bad { color: var(--red); font-weight: 700; }
+.goat { font-family: var(--font-display); font-size: 2.2rem; font-weight: 800; color: var(--red); }
+
+.toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg);
+  padding: 10px 16px; border-radius: 10px; font-size: .92rem; z-index: 30; max-width: calc(100% - 32px); }
+
+@media (max-width: 640px) {
+  .grid2 { grid-template-columns: 1fr; }
+  .card { width: 54px; height: 78px; }
+  .card .c-mid { font-size: 24px; }
+  .hand .card { width: 62px; height: 90px; }
+  .play .who { width: 70px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<main class="wrap">
+
+  <!-- HOME -->
+  <section id="home" class="wrap" style="padding:0">
+    <div class="hero">
+      <span class="eyebrow">Козёл · online card game</span>
+      <h1>Kozel Online</h1>
+      <p class="muted">Host a room and send the code to your friends. Empty seats can be filled with bots. <a href="./">Read the rules</a></p>
+    </div>
+    <div class="panel">
+      <label class="lbl" for="name">Your name</label>
+      <input type="text" id="name" maxlength="16" placeholder="e.g. Ali">
+    </div>
+    <div class="grid2">
+      <div class="panel">
+        <h2>Host a game</h2>
+        <div class="row"><span class="lbl" style="width:90px">Players</span>
+          <div class="seg" id="cfg-n"><button type="button" data-v="2">2</button><button type="button" data-v="3">3</button><button type="button" data-v="4">4</button></div></div>
+        <div class="row" id="cfg-teams-row"><span class="lbl" style="width:90px">With 4</span>
+          <div class="seg" id="cfg-teams"><button type="button" data-v="1">Two pairs</button><button type="button" data-v="0">Everyone alone</button></div></div>
+        <div class="row"><span class="lbl" style="width:90px">Length</span>
+          <div class="seg" id="cfg-target"><button type="button" data-v="1">One deal</button><button type="button" data-v="6">To 6</button><button type="button" data-v="12">To 12</button></div></div>
+        <p class="muted" id="cfg-hint" style="font-size:.9rem"></p>
+        <div class="row"><button type="button" class="btn" id="create">Create room</button></div>
+      </div>
+      <div class="panel">
+        <h2>Join a game</h2>
+        <label class="lbl" for="join-code">Room code from the host</label>
+        <input type="text" class="code" id="join-code" maxlength="5" placeholder="ABCDE" autocomplete="off">
+        <div class="row"><button type="button" class="btn" id="join">Join</button></div>
+        <p class="muted" id="join-msg" style="font-size:.9rem"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ROOM -->
+  <section id="room" hidden class="wrap" style="padding:0">
+    <div class="panel" style="justify-items:start">
+      <span class="eyebrow">Room code</span>
+      <div class="bigcode" id="room-code">-----</div>
+      <div class="row">
+        <button type="button" class="btn ghost" id="copy-link">Copy invite link</button>
+        <span class="mono muted" id="room-link" style="font-size:.8rem;word-break:break-all"></span>
+      </div>
+      <p class="muted" id="room-cfg"></p>
+      <p class="warn" id="room-warn" hidden></p>
+    </div>
+    <div class="panel">
+      <h2>Seats</h2>
+      <div class="seats" id="seats"></div>
+      <div class="row">
+        <button type="button" class="btn" id="start" hidden>Start game</button>
+        <button type="button" class="btn ghost" id="leave">Leave</button>
+        <span class="muted" id="room-status"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- GAME -->
+  <section id="game" hidden class="wrap" style="padding:0">
+    <div class="topbar">
+      <div class="chip"><span class="k">Deal</span><span class="v mono" id="g-deal">1</span></div>
+      <div class="chip"><span class="k">Trump</span><span class="v trumpv" id="g-trump">♥</span></div>
+      <div class="chip"><span class="k">Deck</span><span class="stockw" id="g-stock"></span></div>
+      <div class="scores" id="g-scores"></div>
+    </div>
+    <div class="opps" id="g-opps"></div>
+    <div class="table" id="g-table"></div>
+    <div class="panel">
+      <div class="status" id="g-status"></div>
+      <div class="actions" id="g-actions"></div>
+      <div class="hand" id="g-hand"></div>
+    </div>
+    <details class="panel">
+      <summary>Game log</summary>
+      <div class="log" id="g-log"></div>
+    </details>
+    <div class="row"><a href="./" target="_blank" rel="noopener">Rules</a><button type="button" class="btn ghost" id="g-leave" style="margin-left:auto">Leave game</button></div>
+  </section>
+</main>
+
+<div class="overlay" id="overlay" hidden><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
+<script src="engine.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
