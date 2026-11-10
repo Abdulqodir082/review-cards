@@ -206,6 +206,18 @@ footer a { color: var(--accent); }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }
+/* v2 additions */
+.stock { position: relative; width: 190px; height: 130px; margin: 0 auto; }
+.stock .back {
+  position: absolute; width: 74px; height: 106px; border-radius: 8px; border: 1px solid var(--card-edge);
+  background: repeating-linear-gradient(45deg, var(--accent) 0 6px, var(--accent-soft) 6px 12px);
+}
+.stock .under { position: absolute; left: 70px; top: 26px; transform: rotate(90deg); transform-origin: 37px 53px; }
+.suit-btns button { font-size: 1.15rem; min-width: 46px; }
+.suit-btns button.r { color: var(--red); }
+.suit-btns button.r[aria-pressed="true"] { color: var(--surface); }
+.flag { display: inline-block; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; padding: 2px 8px; border-radius: 999px; background: var(--gold-soft); border: 1px solid var(--gold); }
+.changed { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--accent); }
 </style>
 </head><body>
 
@@ -213,81 +225,68 @@ footer a { color: var(--accent); }
 
   <header class="hero">
     <div class="hero-text">
-      <span class="eyebrow">Russian card game · 4 players · 2 teams</span>
+      <span class="eyebrow">Russian card game · 2 to 4 players</span>
       <h1>Kozel <span class="ru">«Козёл»</span></h1>
-      <p class="lede">This is how I understand the game: who plays, which cards are trumps, how tricks are won and how you end up the <em>goat</em>. Rules change from city to city and from family to family. Where versions differ, I show both and mark the one I'd pick.</p>
-      <p class="note">Go to <a href="#confirm">the checklist at the bottom</a>, tick what your table actually plays, and send me the summary. Then we're on the same page.</p>
+      <p class="lede">Your version of the game, as I understand it after your notes: 36 cards, aces on top, and a trump suit set by the card that lies face up under the deck. Play alone against one or two others, or in two pairs when there are four of you.</p>
+      <p class="note"><span class="changed">Updated from your notes.</span> Things I'm still guessing are marked <span class="flag">guess</span>. Correct me as you read, or use <a href="#confirm">the checklist at the bottom</a>.</p>
     </div>
-    <div class="fan" id="fan" aria-label="The four queens and the seven of clubs fanned out"></div>
+    <div class="fan" id="fan" aria-label="Hearts fanned out as trumps"></div>
   </header>
 
   <div class="facts">
-    <div class="fact"><b>4</b><span>players, in 2 pairs. Partners sit opposite.</span></div>
-    <div class="fact"><b>32</b><span>cards, 7 to Ace. Sixes are taken out.</span></div>
-    <div class="fact"><b>120</b><span>card points in the deck. You need 61 to win a deal.</span></div>
-    <div class="fact"><b>12</b><span>penalty points and your pair are the goats <span class="ru">(козлы)</span>.</span></div>
+    <div class="fact"><b>2–4</b><span>players. Usually 2 or 3 on your own, 4 in two pairs.</span></div>
+    <div class="fact"><b>36</b><span>cards, 6 to Ace. Ace is the highest card.</span></div>
+    <div class="fact"><b>120</b><span>card points in the deck. 61 or more wins the deal.</span></div>
+    <div class="fact"><b>12</b><span>penalty points and you're the goat <span class="ru">(козёл)</span>. <span class="flag">guess</span></span></div>
   </div>
 
   <!-- 1 -->
   <section class="lesson">
-    <div class="lesson-head"><span class="num">01</span><h2>The table</h2><span class="ru">стол и пары</span></div>
+    <div class="lesson-head"><span class="num">01</span><h2>Who plays</h2><span class="ru">сколько игроков</span></div>
     <div class="two">
-      <div class="panel">
-        <svg class="table-svg" viewBox="0 0 320 280" role="img" aria-label="Four players around a table. North and South are one team, West and East the other.">
-          <ellipse cx="160" cy="140" rx="110" ry="90" fill="var(--accent-soft)" stroke="var(--line)"/>
-          <line x1="160" y1="70" x2="160" y2="210" stroke="var(--accent)" stroke-width="2" stroke-dasharray="5 5"/>
-          <line x1="70" y1="140" x2="250" y2="140" stroke="var(--red)" stroke-width="2" stroke-dasharray="5 5"/>
-          <g font-family="IBM Plex Sans, sans-serif" font-size="13" font-weight="600" text-anchor="middle">
-            <circle cx="160" cy="30" r="20" fill="var(--accent)"/><text x="160" y="35" fill="var(--surface)">N</text>
-            <circle cx="160" cy="250" r="20" fill="var(--accent)"/><text x="160" y="255" fill="var(--surface)">S</text>
-            <circle cx="28" cy="140" r="20" fill="var(--red)"/><text x="28" y="145" fill="var(--surface)">W</text>
-            <circle cx="292" cy="140" r="20" fill="var(--red)"/><text x="292" y="145" fill="var(--surface)">E</text>
-            <text x="200" y="100" fill="var(--accent)">Team A</text>
-            <text x="210" y="168" fill="var(--red)">Team B</text>
-          </g>
-          <path d="M 255 70 A 120 100 0 0 1 270 110" fill="none" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr)"/>
-          <defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="var(--muted)"/></marker></defs>
-          <text x="262" y="62" font-size="11" fill="var(--muted)" font-family="IBM Plex Sans, sans-serif" text-anchor="middle">clockwise</text>
-        </svg>
+      <div class="panel" style="display:grid;gap:14px;justify-items:center">
+        <div class="toggle" role="group" aria-label="Number of players">
+          <button type="button" data-players="2" aria-pressed="false">2 players</button>
+          <button type="button" data-players="3" aria-pressed="true">3 players</button>
+          <button type="button" data-players="4" aria-pressed="false">4 · two pairs</button>
+        </div>
+        <svg class="table-svg" id="seats" viewBox="0 0 320 280" role="img" aria-label="Seating around the table"></svg>
       </div>
-      <div class="panel" style="display:grid;gap:10px">
-        <p>Four people play as two pairs. You sit across from your partner, so play alternates between the teams.</p>
-        <p>Each pair keeps <strong>one shared pile</strong> of the tricks it wins. Only the card points in that pile count, not how many tricks you took.</p>
-        <p>Play moves clockwise. The deal passes to the next player each round.</p>
-        <p class="muted">2- and 3-player versions exist, but this page covers the classic game for four.</p>
-      </div>
+      <div class="panel" style="display:grid;gap:10px" id="seat-text"></div>
     </div>
   </section>
 
   <!-- 2 -->
   <section class="lesson">
-    <div class="lesson-head"><span class="num">02</span><h2>Trumps: 14 cards that beat everything</h2><span class="ru">козыри</span></div>
-    <p>This is the part that surprises people who know Durak. In Kozel the trumps are fixed and never change: <strong>all four queens, all four jacks, and every club</strong>. A queen of hearts is not a heart. It's a trump.</p>
+    <div class="lesson-head"><span class="num">02</span><h2>The trump suit lies under the deck</h2><span class="ru">козырь</span></div>
+    <p>After dealing, the next card is turned face up and slid <strong>under the deck</strong>, sideways, so everyone can see it. Its suit is the <strong>trump</strong> <span class="ru">(козырь)</span> for the whole deal. If it's a heart, <strong>every heart beats every card of the other suits</strong>, even a 6♥ against an A♠.</p>
+    <div class="two">
+      <div class="panel" style="display:grid;gap:14px;justify-items:center">
+        <div class="stock" id="stock" aria-label="The deck with the trump card lying face up underneath"></div>
+        <div class="toggle suit-btns" role="group" aria-label="Pick a trump suit to preview">
+          <button type="button" data-suit="♠">♠</button>
+          <button type="button" data-suit="♥" class="r">♥</button>
+          <button type="button" data-suit="♦" class="r">♦</button>
+          <button type="button" data-suit="♣">♣</button>
+        </div>
+        <p class="muted" style="text-align:center">Tap a suit to see that deal's trumps.</p>
+      </div>
+      <div class="panel" style="display:grid;gap:10px">
+        <h3>The bottom card is a real card</h3>
+        <p>It stays in the game. It's the <strong>last card drawn</strong> from the deck, so whoever draws last gets that trump into their hand.</p>
+        <h3 style="margin-top:6px">Changes every deal</h3>
+        <p>Next deal, a new card goes under the deck and may set a different trump suit.</p>
+      </div>
+    </div>
     <div class="panel" style="display:grid;gap:12px">
       <div class="controls" style="justify-content:space-between">
-        <div class="controls">
-          <span class="group-tag">Highest on the left</span>
-        </div>
-        <div class="toggle" role="group" aria-label="Where the seven of clubs ranks">
-          <button type="button" id="lad-a" aria-pressed="true">7♣ is lowest (my pick)</button>
-          <button type="button" id="lad-b" aria-pressed="false">7♣ is the top card</button>
-        </div>
+        <h3 id="trump-title">Trumps this deal</h3>
+        <span class="group-tag">Highest on the left</span>
       </div>
       <div class="ladder" id="ladder"></div>
-      <div class="ladder-legend"><span>← strongest</span><span>weakest →</span></div>
-      <p class="muted" id="ladder-note"></p>
-    </div>
-    <div class="two">
-      <div class="panel" style="display:grid;gap:10px">
-        <h3>Plain suits <span class="ru">простые масти</span></h3>
-        <p>Spades, hearts and diamonds without their jacks and queens. Six cards each. Note that the <strong>10 outranks the king</strong>.</p>
-        <div class="ladder" id="plain"></div>
-      </div>
-      <div class="panel" style="display:grid;gap:10px">
-        <h3>Inside the trumps</h3>
-        <p>Queens beat jacks. Within each, the suit order is <strong>♣ › ♠ › ♥ › ♦</strong>. After the jacks come the remaining clubs: A, 10, K, 9, 8, 7.</p>
-        <p class="muted">Any trump beats any plain card, even a 7♣ against an ace of hearts (in the version where 7♣ isn't top, it's still a trump).</p>
-      </div>
+      <h3>Every other suit</h3>
+      <div class="ladder" id="plain"></div>
+      <p class="muted">Same order in every suit: <strong>A, 10, K, Q, J, 9, 8, 7, 6</strong>. I kept the 10 above the king, as in most point games. <span class="flag">guess</span></p>
     </div>
   </section>
 
@@ -302,10 +301,10 @@ footer a { color: var(--accent); }
         </table>
       </div>
       <div class="panel" style="display:grid;gap:10px">
-        <p>Points don't depend on suit or on being a trump. A queen is 3 whether it's ♣ or ♦.</p>
+        <p>Points don't depend on suit or on being a trump. A king is 4 whether it's a trump or not.</p>
         <p class="mono" style="font-size:.95rem">11 + 10 + 4 + 3 + 2 = 30 per suit<br>30 × 4 suits = <strong>120</strong></p>
-        <p>After the last trick each pair counts its pile. <strong>61 or more wins the deal.</strong> 60 : 60 is a tie.</p>
-        <p class="muted">Sevens, eights and nines are worth nothing, but they're useful for following suit cheaply.</p>
+        <p>After the last trick everyone counts their pile (a pair counts together). <strong>61 or more wins the deal.</strong></p>
+        <p class="muted">Sixes through nines are worth nothing. Adding the sixes doesn't change the 120 total.</p>
       </div>
     </div>
   </section>
@@ -314,12 +313,13 @@ footer a { color: var(--accent); }
   <section class="lesson">
     <div class="lesson-head"><span class="num">04</span><h2>Dealing and playing a trick</h2><span class="ru">раздача и взятка</span></div>
     <ol class="rules panel">
-      <li><span><strong>Deal 8 cards to each player</strong>, the whole deck. <span class="muted">(Some tables deal 4 each and refill from a stock after every trick. See the checklist.)</span></span></li>
-      <li><span>The player left of the dealer leads any card.</span></li>
-      <li><span><strong>You must follow the led suit.</strong> If a trump was led, you must play a trump. If a plain suit was led, play that plain suit.</span></li>
-      <li><span>If you can't follow, play anything: a trump to take it, or a worthless card to throw away. You are not forced to trump.</span></li>
-      <li><span>The highest trump wins the trick. With no trump in it, the highest card of the led suit wins.</span></li>
-      <li><span>The winner's pair takes the 4 cards into its pile, and the winner leads next.</span></li>
+      <li><span><strong>Deal 4 cards to each player.</strong> <span class="flag">guess</span> Turn the next card face up under the deck as the trump. The rest is the stock.</span></li>
+      <li><span>One player leads a card. The others play in turn, clockwise.</span></li>
+      <li><span><strong>You must follow the led suit</strong> if you can.</span></li>
+      <li><span>If you can't follow, play anything: a trump to take the trick, or a worthless card to throw away. <span class="flag">guess</span></span></li>
+      <li><span>The highest trump wins. With no trump in the trick, the highest card of the led suit wins.</span></li>
+      <li><span>The winner takes the cards into their pile. Everyone draws back up to 4, <strong>winner first</strong>, and the winner leads next.</span></li>
+      <li><span>When the stock runs out, play out your hands. The face-up trump is the very last card drawn.</span></li>
     </ol>
 
     <div class="panel trick">
@@ -334,7 +334,7 @@ footer a { color: var(--accent); }
         <div class="slot e off" data-seat="e"></div>
       </div>
       <div class="steps">
-        <span class="eyebrow">Example trick</span>
+        <span class="eyebrow">Example trick · hearts are trump · 4 players</span>
         <p class="step-text" id="step-text"></p>
         <div class="controls">
           <button type="button" class="btn ghost" id="prev">Back</button>
@@ -346,24 +346,23 @@ footer a { color: var(--accent); }
 
     <div class="panel gotcha">
       <div class="hand">
-        <div class="card sm red" data-c="K♦"></div>
-        <div class="card sm red" data-c="Q♦"></div>
-        <div class="card sm" data-c="8♠"></div>
+        <div class="card sm" data-c="A♠"></div>
+        <div class="card sm red trump" data-c="6♥"></div>
       </div>
-      <p style="flex:1;min-width:220px"><strong>Common mistake:</strong> diamonds are led and you hold K♦ and Q♦. You must play the <strong>K♦</strong>. The Q♦ is a trump, not a diamond, so it doesn't count for following. If you held only Q♦ and 8♠, you'd be "out of diamonds" and could play either.</p>
+      <p style="flex:1;min-width:220px"><strong>When hearts are trump,</strong> the 6♥ takes the A♠ if the player had no spades to follow with. The lowest trump still beats the highest plain card.</p>
     </div>
   </section>
 
   <!-- 5 -->
   <section class="lesson">
-    <div class="lesson-head"><span class="num">05</span><h2>Scoring: who becomes the goat</h2><span class="ru">кто козёл</span></div>
-    <p>The <strong>losing pair</strong> of each deal gets penalty points. The first pair to collect <strong>12</strong> loses the game and is called <em>козлы</em>, the goats.</p>
+    <div class="lesson-head"><span class="num">05</span><h2>Scoring: who becomes the goat</h2><span class="ru">кто козёл</span> <span class="flag">guess</span></div>
+    <p>Whoever loses a deal gets penalty points: a player in a 2–3 player game, or a pair with four players. The first to collect <strong>12</strong> loses the game and is the <em>goat</em>.</p>
     <div class="tiers">
-      <div class="tier"><span class="pts">+2</span><strong>Normal loss</strong><span class="muted">Losers took 31–59 card points.</span></div>
-      <div class="tier"><span class="pts">+4</span><strong>Under 31</strong><span class="muted">Losers took 30 or less. Often called losing "without eyes" or <span class="ru">«без 30»</span>.</span></div>
-      <div class="tier"><span class="pts">+6</span><strong>No tricks at all</strong><span class="muted">Losers didn't win a single trick.</span></div>
+      <div class="tier"><span class="pts">+2</span><strong>Normal loss</strong><span class="muted">Took 31–59 card points.</span></div>
+      <div class="tier"><span class="pts">+4</span><strong>Under 31</strong><span class="muted">Took 30 or less, "without eyes" <span class="ru">«без 30»</span>.</span></div>
+      <div class="tier"><span class="pts">+6</span><strong>No tricks at all</strong><span class="muted">Didn't win a single trick.</span></div>
     </div>
-    <p class="note"><strong>60 : 60 is "eggs"</strong> <span class="ru">(«яйца»)</span>. Nobody gets penalty points, and in many groups the loser of the <em>next</em> deal gets double. The simplest version gives a flat +2 for every loss and ignores the tiers. Pick yours in the checklist.</p>
+    <p class="note"><strong>With 3 players</strong> nobody may reach 61. My guess: the player with the most points wins, and the other two both get penalty points. <strong>60 : 60</strong> ("eggs", <span class="ru">«яйца»</span>) means nobody scores, and the next loss counts double.</p>
     <div class="panel scroll">
       <table class="pad">
         <thead><tr><th>Deal</th><th>Team A pile</th><th>Team B pile</th><th>Penalty</th><th>A total</th><th>B total</th></tr></thead>
@@ -372,28 +371,10 @@ footer a { color: var(--accent); }
     </div>
   </section>
 
-  <!-- 6 -->
-  <section class="lesson">
-    <div class="lesson-head"><span class="num">06</span><h2>House rules I've seen</h2><span class="ru">местные правила</span></div>
-    <div class="two">
-      <div class="panel" style="display:grid;gap:8px">
-        <h3>Queen of clubs meets 7♣</h3>
-        <div class="hand" style="display:flex;gap:6px"><div class="card sm" data-c="Q♣"></div><div class="card sm" data-c="7♣"></div></div>
-        <p>In the version where 7♣ is the top card: if Q♣ and 7♣ land in the same trick from different teams, the deal stops right there and the pair that played Q♣ gives the other pair 4 penalty points.</p>
-      </div>
-      <div class="panel" style="display:grid;gap:8px">
-        <h3>No trump lead to start</h3>
-        <p>The pair that opened the previous deal may not open the new one with a trump.</p>
-        <h3 style="margin-top:8px">Refill from the stock</h3>
-        <p>Deal 4 cards each, put 16 face down. After each trick every player draws one card, winner first, until the stock runs out.</p>
-      </div>
-    </div>
-  </section>
-
   <!-- confirm -->
   <section class="lesson" id="confirm">
     <div class="lesson-head"><span class="num">✓</span><h2>Are we on the same page?</h2></div>
-    <p>Tick how <em>your</em> table plays. The summary below updates as you go. Copy it and send it back to me, and I'll adjust the rules.</p>
+    <p>Tick how <em>your</em> table plays. The summary below updates as you go. Copy it and send it to me, and I'll fix the page.</p>
     <div class="panel qs" id="qs"></div>
     <div class="panel" style="display:grid;gap:10px">
       <label for="summary" class="eyebrow">Your summary</label>
@@ -403,7 +384,7 @@ footer a { color: var(--accent); }
   </section>
 
   <footer>
-    <p>Rules compiled from common Russian descriptions of «Козёл», including <a href="https://lifehacker.ru/kak-igrat-v-kozla/" target="_blank" rel="noopener">Lifehacker.ru</a>. Regional variations are normal, so agree on them before the first deal.</p>
+    <p>Written from your description of the game, with gaps filled from common Russian rules for «Козёл». Agree on the house rules before the first deal.</p>
   </footer>
 </main>
 
@@ -411,59 +392,79 @@ footer a { color: var(--accent); }
 (function () {
   const RED = s => s === "♥" || s === "♦";
   const FACE = r => r === "J" || r === "Q" || r === "K";
-  function isTrump(c) { const s = c.slice(-1), r = c.slice(0, -1); return s === "♣" || r === "J" || r === "Q"; }
-  function cardHTML(c, sm) {
+  const ORDER = ["A","10","K","Q","J","9","8","7","6"];
+  const SUITS = ["♠","♥","♦","♣"];
+  let trump = "♥";
+  function cardHTML(c, sm, isTrump) {
     const s = c.slice(-1), r = c.slice(0, -1);
-    const cls = ["card", sm ? "sm" : "", RED(s) ? "red" : "", FACE(r) ? "face" : "", isTrump(c) ? "trump" : ""].join(" ");
+    const t = isTrump === undefined ? s === trump : isTrump;
+    const cls = ["card", sm ? "sm" : "", RED(s) ? "red" : "", FACE(r) ? "face" : "", t ? "trump" : ""].join(" ");
     const mid = FACE(r) ? r + s : s;
-    return `<div class="${cls}" aria-label="${c}"><span class="c-tl">${r}<small>${s}</small></span><span class="c-mid">${mid}</span><span class="c-br">${r}<small>${s}</small></span></div>`;
+    return `<div class="${cls}" aria-label="${c}${t ? " (trump)" : ""}"><span class="c-tl">${r}<small>${s}</small></span><span class="c-mid">${mid}</span><span class="c-br">${r}<small>${s}</small></span></div>`;
   }
-  function fill(el, c, sm) { el.outerHTML = cardHTML(c, sm); }
-  document.querySelectorAll("[data-c]").forEach(el => fill(el, el.dataset.c, el.classList.contains("sm")));
+  document.querySelectorAll("[data-c]").forEach(el => { el.outerHTML = cardHTML(el.dataset.c, true); });
 
-  // hero fan
+  // hero fan: trump hearts
   const fan = document.getElementById("fan");
-  const fanCards = ["Q♦", "Q♥", "7♣", "Q♠", "Q♣"];
-  fan.innerHTML = fanCards.map(c => cardHTML(c)).join("");
+  fan.innerHTML = ["6♥", "J♥", "A♥", "10♥", "K♥"].map(c => cardHTML(c, false, true)).join("");
   [...fan.children].forEach((el, i) => {
-    const a = (i - 2) * 14;
-    el.style.transform = `translateX(-50%) rotate(${a}deg) translateY(${Math.abs(i - 2) * 4}px) scale(1.15)`;
+    el.style.transform = `translateX(-50%) rotate(${(i - 2) * 14}deg) translateY(${Math.abs(i - 2) * 4}px) scale(1.15)`;
   });
 
-  // ladder
-  const base = ["Q♣","Q♠","Q♥","Q♦","J♣","J♠","J♥","J♦","A♣","10♣","K♣","9♣","8♣","7♣"];
-  const altB = ["7♣","Q♣","Q♠","Q♥","Q♦","J♣","J♠","J♥","J♦","A♣","10♣","K♣","9♣","8♣"];
-  const ladder = document.getElementById("ladder");
-  const note = document.getElementById("ladder-note");
-  function drawLadder(which) {
-    const list = which === "b" ? altB : base;
-    ladder.innerHTML = list.map((c, i) => `<div class="rung">${cardHTML(c, true)}<span class="rank">${i + 1}</span></div>`).join("");
-    note.textContent = which === "b"
-      ? "Some groups make the humble 7♣ the strongest card in the game. It's still worth 0 points, but it can capture Q♣. This version usually comes with the Q♣ vs 7♣ house rule below."
-      : "In my version the clubs follow the normal order, so 7♣ is the weakest trump. It still beats any plain card.";
-    document.getElementById("lad-a").setAttribute("aria-pressed", which !== "b");
-    document.getElementById("lad-b").setAttribute("aria-pressed", which === "b");
+  // seating
+  const seatInfo = {
+    2: { text: ["Two players sit face to face. Each plays <strong>for themselves</strong> and keeps their own pile of tricks.", "Every trick is just two cards: one led, one answered."],
+         seats: [[160, 250, "You", "a"], [160, 30, "P2", "b"]] },
+    3: { text: ["Three players, <strong>every one for themselves</strong>. Each keeps their own pile.", "Each trick has three cards. Play goes clockwise.", "This and the 2-player game are the most common ways to play."],
+         seats: [[160, 250, "You", "a"], [40, 70, "P2", "b"], [280, 70, "P3", "c"]] },
+    4: { text: ["With four, you play <strong>two pairs</strong>. Partners sit opposite, so turns alternate between the teams.", "Each pair keeps <strong>one shared pile</strong>. Only the card points in it count, not the number of tricks."],
+         seats: [[160, 250, "S", "a"], [28, 140, "W", "b"], [160, 30, "N", "a"], [292, 140, "E", "b"]] }
+  };
+  const colors = { a: "var(--accent)", b: "var(--red)", c: "var(--gold)" };
+  function drawSeats(n) {
+    const info = seatInfo[n];
+    let svg = `<ellipse cx="160" cy="140" rx="110" ry="90" fill="var(--accent-soft)" stroke="var(--line)"/>`;
+    if (n === 4) svg += `<line x1="160" y1="70" x2="160" y2="210" stroke="var(--accent)" stroke-width="2" stroke-dasharray="5 5"/><line x1="70" y1="140" x2="250" y2="140" stroke="var(--red)" stroke-width="2" stroke-dasharray="5 5"/>
+      <text x="200" y="100" fill="var(--accent)" font-size="13" font-weight="600" font-family="IBM Plex Sans, sans-serif">Team A</text><text x="200" y="168" fill="var(--red)" font-size="13" font-weight="600" font-family="IBM Plex Sans, sans-serif">Team B</text>`;
+    svg += info.seats.map(([x, y, l, c]) => `<circle cx="${x}" cy="${y}" r="21" fill="${colors[c]}"/><text x="${x}" y="${y + 5}" fill="var(--surface)" font-size="13" font-weight="600" text-anchor="middle" font-family="IBM Plex Sans, sans-serif">${l}</text>`).join("");
+    document.getElementById("seats").innerHTML = svg;
+    document.getElementById("seat-text").innerHTML = info.text.map(t => `<p>${t}</p>`).join("");
+    document.querySelectorAll("[data-players]").forEach(b => b.setAttribute("aria-pressed", b.dataset.players == n));
   }
-  document.getElementById("lad-a").onclick = () => { drawLadder("a"); setAnswer("seven", "low"); };
-  document.getElementById("lad-b").onclick = () => { drawLadder("b"); setAnswer("seven", "top"); };
+  document.querySelectorAll("[data-players]").forEach(b => b.onclick = () => drawSeats(+b.dataset.players));
+  drawSeats(3);
 
-  document.getElementById("plain").innerHTML = ["A♥","10♥","K♥","9♥","8♥","7♥"]
-    .map((c, i) => `<div class="rung">${cardHTML(c, true)}<span class="rank">${i + 1}</span></div>`).join("");
+  // trump preview
+  const underCard = { "♠": "9♠", "♥": "9♥", "♦": "9♦", "♣": "9♣" };
+  function drawTrump(s) {
+    trump = s;
+    document.getElementById("stock").innerHTML =
+      `<div class="under">${cardHTML(underCard[s], false, true)}</div>` +
+      [0, 1, 2, 3].map(i => `<div class="back" style="left:${i * 2}px;top:${12 - i * 2}px"></div>`).join("");
+    document.getElementById("ladder").innerHTML = ORDER.map((r, i) => `<div class="rung">${cardHTML(r + s, true, true)}<span class="rank">${i + 1}</span></div>`).join("");
+    const other = SUITS.find(x => x !== s);
+    document.getElementById("plain").innerHTML = ORDER.map((r, i) => `<div class="rung">${cardHTML(r + other, true, false)}<span class="rank">${i + 1}</span></div>`).join("");
+    const names = { "♠": "spades", "♥": "hearts", "♦": "diamonds", "♣": "clubs" };
+    document.getElementById("trump-title").textContent = `Trumps this deal: ${names[s]} ${s}`;
+    document.querySelectorAll("[data-suit]").forEach(b => b.setAttribute("aria-pressed", b.dataset.suit === s));
+  }
+  document.querySelectorAll("[data-suit]").forEach(b => b.onclick = () => drawTrump(b.dataset.suit));
+  drawTrump("♥");
 
   // points
-  const pts = [["Ace", 11], ["10", 10], ["King", 4], ["Queen", 3], ["Jack", 2], ["9, 8, 7", 0]];
+  const pts = [["Ace", 11], ["10", 10], ["King", 4], ["Queen", 3], ["Jack", 2], ["9, 8, 7, 6", 0]];
   document.getElementById("points").innerHTML = pts.map(([n, v]) =>
     `<tr><td>${n}</td><td style="width:45%"><div class="bar" style="width:${v / 11 * 100}%"></div></td><td class="v">${v}</td></tr>`
   ).join("") + `<tr class="total"><td>Whole deck</td><td></td><td class="v">120</td></tr>`;
 
-  // trick demo
+  // trick demo (hearts trump, fixed)
   const steps = [
-    { seat: null, text: "You (South) lead. Watch how a queen and a jack of diamonds behave: they're trumps, not diamonds." },
-    { seat: "s", card: "K♥", text: "<strong>You lead K♥</strong> (4 points). Hearts is now the suit everyone must follow." },
-    { seat: "w", card: "10♥", text: "<strong>West follows with 10♥</strong> (10 points). In Kozel the 10 beats the king, so West is winning for now." },
-    { seat: "n", card: "J♦", text: "<strong>Your partner has no hearts</strong>, so they trump with J♦. A jack is a trump in every suit. Team A is winning." },
-    { seat: "e", card: "Q♦", text: "<strong>East is out of hearts too</strong> and plays Q♦. Queens outrank jacks, so East wins." },
-    { seat: "done", text: "<strong>Team B takes the trick:</strong> 4 + 10 + 2 + 3 = <span class='mono'>19</span> points go into their pile. East leads the next trick." }
+    { seat: null, text: "Hearts are trump: a 9♥ lies face up under the deck. You (South) lead." },
+    { seat: "s", card: "K♠", text: "<strong>You lead K♠</strong> (4 points). Everyone must now play a spade if they have one." },
+    { seat: "w", card: "10♠", text: "<strong>West follows with 10♠</strong> (10 points). The 10 beats the king, so West is winning." },
+    { seat: "n", card: "6♥", text: "<strong>Your partner has no spades</strong>, so they trump with 6♥. The smallest trump beats every spade. Your team is winning." },
+    { seat: "e", card: "J♥", text: "<strong>East has no spades either</strong> and plays J♥. A higher trump beats a lower one, so East wins." },
+    { seat: "done", text: "<strong>Team B takes the trick:</strong> 4 + 10 + 0 + 2 = <span class='mono'>16</span> points go into their pile. Everyone draws a card, East first, and East leads next." }
   ];
   let step = 0;
   const textEl = document.getElementById("step-text");
@@ -474,31 +475,26 @@ footer a { color: var(--accent); }
     document.querySelectorAll("#felt .slot").forEach(slot => {
       const idx = steps.findIndex(s => s.seat === slot.dataset.seat);
       if (idx > 0 && idx <= step) {
-        if (!slot.firstChild) slot.innerHTML = cardHTML(steps[idx].card);
+        const c = steps[idx].card;
+        slot.innerHTML = cardHTML(c, false, c.endsWith("♥"));
         slot.classList.remove("off");
-        const card = slot.firstChild;
-        card.classList.toggle("win", step === steps.length - 1 && slot.dataset.seat === "e");
-      } else {
-        slot.classList.add("off");
-        slot.innerHTML = "";
-      }
+        slot.firstChild.classList.toggle("win", step === steps.length - 1 && slot.dataset.seat === "e");
+      } else { slot.classList.add("off"); slot.innerHTML = ""; }
     });
     [...dots.children].forEach((d, i) => d.classList.toggle("on", i <= step));
     document.getElementById("prev").disabled = step === 0;
-    const nx = document.getElementById("next");
-    nx.textContent = step === steps.length - 1 ? "Play again" : (step === 0 ? "Start" : "Next card");
+    document.getElementById("next").textContent = step === steps.length - 1 ? "Play again" : (step === 0 ? "Start" : "Next card");
   }
   document.getElementById("next").onclick = () => { step = step === steps.length - 1 ? 0 : step + 1; renderStep(); };
   document.getElementById("prev").onclick = () => { if (step > 0) { step--; renderStep(); } };
   renderStep();
 
-  // score pad (tiered example)
+  // score pad
   const deals = [[72, 48], [35, 85], [60, 60], [94, 26], [41, 79], [101, 19]];
-  const pad = document.getElementById("pad");
   let A = 0, B = 0, eggs = false, rows = "";
   const tally = n => "|".repeat(n);
   deals.forEach(([a, b], i) => {
-    let pen = "";
+    let pen;
     if (a === 60) { pen = "Eggs: nobody, next loss ×2"; eggs = true; }
     else {
       const loser = a < b ? "A" : "B", lp = Math.min(a, b);
@@ -507,79 +503,52 @@ footer a { color: var(--accent); }
       if (loser === "A") A += p; else B += p;
       pen = `${loser} +${p}`;
     }
-    const goatA = A >= 12, goatB = B >= 12;
     rows += `<tr><td>${i + 1}</td><td class="mono">${a}</td><td class="mono">${b}</td><td>${pen}</td>
-      <td class="${goatA ? "goat" : ""}"><span class="mono">${A}</span> <span class="tally muted">${tally(A)}</span></td>
-      <td class="${goatB ? "goat" : ""}"><span class="mono">${B}</span> <span class="tally muted">${tally(B)}</span></td></tr>`;
+      <td class="${A >= 12 ? "goat" : ""}"><span class="mono">${A}</span> <span class="tally muted">${tally(A)}</span></td>
+      <td class="${B >= 12 ? "goat" : ""}"><span class="mono">${B}</span> <span class="tally muted">${tally(B)}</span></td></tr>`;
   });
-  rows += `<tr><td colspan="6" class="muted" style="text-align:left">Example game. Team B passes 12 after deal 6, so <span class="goat">Team B are the goats</span>.</td></tr>`;
-  pad.innerHTML = rows;
+  rows += `<tr><td colspan="6" class="muted" style="text-align:left">Example 4-player game. Team B passes 12 after deal 6, so <span class="goat">Team B are the goats</span>.</td></tr>`;
+  document.getElementById("pad").innerHTML = rows;
 
   // checklist
   const Q = [
-    { id: "players", q: "Players", opts: [["four", "4 players in 2 pairs, partners opposite", true], ["other", "We usually play with 2 or 3 people"]] },
-    { id: "deck", q: "Deck", opts: [["32", "32 cards (7 to Ace)", true], ["36", "36 cards (with sixes)"], ["24", "24 cards (9 to Ace)"]] },
-    { id: "trumps", q: "Which cards are trumps?", opts: [["qjc", "All queens + all jacks + all clubs (fixed every deal)", true], ["suit", "A trump suit is chosen each deal, like Durak"]] },
-    { id: "seven", q: "Seven of clubs", opts: [["low", "7♣ is the weakest trump", true], ["top", "7♣ is the highest card in the game"]] },
-    { id: "deal", q: "Dealing", opts: [["eight", "8 cards each, no stock", true], ["four", "4 cards each, refill from a stock after every trick"]] },
-    { id: "follow", q: "Following suit", opts: [["must", "Must follow suit; if you can't, play anything (no forced trumping)", true], ["trump", "If you can't follow, you must trump if you can"]] },
-    { id: "score", q: "Penalty points for the losing pair", opts: [["tier", "+2 normal, +4 under 31, +6 no tricks", true], ["flat", "Always +2"], ["other", "Something else (I'll explain)"]] },
-    { id: "eggs", q: "60 : 60", opts: [["double", "\"Eggs\": nobody scores, next deal's penalty is doubled", true], ["nothing", "Nobody scores, just play on"]] },
-    { id: "end", q: "End of game", opts: [["twelve", "First pair to 12 penalty points are the goats", true], ["other", "A different target"]] },
-    { id: "house", q: "House rules we use", multi: true, opts: [["qc7c", "Q♣ meets 7♣ ends the deal"], ["nolead", "No trump lead to open a deal"]] }
+    { id: "players", q: "Players", opts: [["flex", "2, 3 or 4 players; with 4 we play in two pairs", true], ["other", "Something else"]] },
+    { id: "deck", q: "Deck", opts: [["36", "36 cards (6 to Ace)", true], ["32", "32 cards (no sixes)"]] },
+    { id: "order", q: "Card order", opts: [["a10k", "A, 10, K, Q, J, 9, 8, 7, 6 (10 above king)", true], ["ak10", "A, K, Q, J, 10, 9, 8, 7, 6 (normal order)"]] },
+    { id: "trump", q: "Trump", opts: [["bottom", "Suit of the face-up card under the deck", true], ["other", "Chosen another way"]] },
+    { id: "deal", q: "Cards dealt to each player", opts: [["4", "4, then draw back up after each trick", true], ["6", "6, then draw back up after each trick"], ["other", "Another number"]] },
+    { id: "lead", q: "Leading", opts: [["one", "Lead one card at a time", true], ["many", "You may lead several cards of the same suit at once"]] },
+    { id: "follow", q: "If you can't follow suit", opts: [["any", "Play any card (trumping is optional)", true], ["trump", "You must trump if you can"]] },
+    { id: "points", q: "Card points (A 11, 10 10, K 4, Q 3, J 2)", opts: [["yes", "Yes, and 61+ wins the deal", true], ["no", "We count differently"]] },
+    { id: "score", q: "Penalty for losing a deal", opts: [["tier", "+2 normal, +4 under 31, +6 no tricks", true], ["flat", "Always +2"], ["other", "Something else"]] },
+    { id: "end", q: "End of game", opts: [["twelve", "First to 12 penalty points is the goat", true], ["other", "A different target"]] }
   ];
   let answers = {};
-  try { answers = JSON.parse(localStorage.getItem("kozel-answers") || "{}"); } catch (e) { answers = {}; }
-  Q.forEach(q => { if (!(q.id in answers)) answers[q.id] = q.multi ? [] : q.opts.find(o => o[2])[0]; });
+  try { answers = JSON.parse(localStorage.getItem("kozel-answers-v2") || "{}"); } catch (e) { answers = {}; }
+  Q.forEach(q => { if (!q.opts.some(o => o[0] === answers[q.id])) answers[q.id] = q.opts.find(o => o[2])[0]; });
 
   const qs = document.getElementById("qs");
   qs.innerHTML = Q.map(q => `<fieldset class="q" style="border:0;margin:0;padding-inline:0"><legend style="padding:0"><h3>${q.q}</h3></legend>${
     q.opts.map(([v, label, mine]) => {
       const id = `q-${q.id}-${v}`;
-      return `<label for="${id}"><input id="${id}" type="${q.multi ? "checkbox" : "radio"}" name="${q.id}" value="${v}"><span>${label}${mine ? '<span class="mine">my guess</span>' : ""}</span></label>`;
+      return `<label for="${id}"><input id="${id}" type="radio" name="${q.id}" value="${v}"><span>${label}${mine ? '<span class="mine">my guess</span>' : ""}</span></label>`;
     }).join("")}</fieldset>`).join("");
-
-  function syncInputs() {
-    Q.forEach(q => q.opts.forEach(([v]) => {
-      const el = document.getElementById(`q-${q.id}-${v}`);
-      el.checked = q.multi ? answers[q.id].includes(v) : answers[q.id] === v;
-    }));
-  }
+  function syncInputs() { Q.forEach(q => q.opts.forEach(([v]) => { document.getElementById(`q-${q.id}-${v}`).checked = answers[q.id] === v; })); }
   function summary() {
-    const lines = ["Kozel rules check:"];
-    let same = 0, total = 0;
-    Q.forEach(q => {
-      if (q.multi) {
-        const picked = q.opts.filter(o => answers[q.id].includes(o[0])).map(o => o[1]);
-        lines.push(`- ${q.q}: ${picked.length ? picked.join("; ") : "none"}`);
-      } else {
-        const o = q.opts.find(o => o[0] === answers[q.id]);
-        total++; if (o[2]) same++;
-        lines.push(`- ${q.q}: ${o[1]}${o[2] ? " ✓ same" : " ✗ different"}`);
-      }
-    });
-    lines.splice(1, 0, `Matches your version on ${same} of ${total} points.`);
-    document.getElementById("summary").value = lines.join("\n");
+    let same = 0;
+    const lines = Q.map(q => { const o = q.opts.find(o => o[0] === answers[q.id]); if (o[2]) same++; return `- ${q.q}: ${o[1]}${o[2] ? " ✓" : " ✗ different"}`; });
+    document.getElementById("summary").value = ["Kozel rules check:", `Matches on ${same} of ${Q.length} points.`, ...lines].join("\n");
   }
-  function save() { try { localStorage.setItem("kozel-answers", JSON.stringify(answers)); } catch (e) {} }
-  function setAnswer(id, v) { answers[id] = v; syncInputs(); summary(); save(); }
   qs.addEventListener("change", e => {
-    const t = e.target, q = Q.find(q => q.id === t.name);
-    if (q.multi) {
-      const set = new Set(answers[q.id]); t.checked ? set.add(t.value) : set.delete(t.value); answers[q.id] = [...set];
-    } else answers[q.id] = t.value;
-    if (q.id === "seven") drawLadder(t.value === "top" ? "b" : "a");
-    summary(); save();
+    answers[e.target.name] = e.target.value; summary();
+    try { localStorage.setItem("kozel-answers-v2", JSON.stringify(answers)); } catch (err) {}
   });
   syncInputs(); summary();
-  drawLadder(answers.seven === "top" ? "b" : "a");
 
   document.getElementById("copy").onclick = () => {
     const ta = document.getElementById("summary");
     const ok = () => { const c = document.getElementById("copied"); c.hidden = false; setTimeout(() => c.hidden = true, 1600); };
-    try {
-      navigator.clipboard.writeText(ta.value).then(ok, () => { ta.focus(); ta.select(); });
-    } catch (e) { ta.focus(); ta.select(); }
+    try { navigator.clipboard.writeText(ta.value).then(ok, () => { ta.focus(); ta.select(); }); } catch (e) { ta.focus(); ta.select(); }
   };
 })();
 </script>
