@@ -76,3 +76,16 @@ Revoke it anytime from the same settings page.
   your own site). Assign the real review link the moment they're on board.
 - `error_correction=M` in `generate_qr.py` tolerates minor print smudging. Bump
   to `H` if cards will be laminated/handled heavily.
+
+## Kozel (Козёл) card game
+
+- `kozel/index.html`: visual rulebook.
+- `kozel/play.html`: online game for 2–4 players. The host creates a room and shares
+  the 5-letter code or invite link; empty seats can be bots. Game length: one deal,
+  to 6, or to 12 bad points.
+- `kozel/engine.js`: the rules engine (also runs in Node for testing).
+
+How online play works: the host's browser runs the game and talks to the other
+players directly (WebRTC via PeerJS's free public signalling server). No backend is
+needed, so it works on GitHub Pages. The host has to keep their tab open for the
+whole game.
