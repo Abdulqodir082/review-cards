@@ -111,7 +111,9 @@
 
   function startHostPeer(retry) {
     if (typeof Peer === "undefined") { setOffline("The online library didn't load. You can still play against bots."); return; }
-    const peer = new Peer(PREFIX + app.code);
+    let peer;
+    try { peer = new Peer(PREFIX + app.code); }
+    catch (e) { setOffline("Online play isn't available here. You can still play against bots."); return; }
     app.peer = peer;
     peer.on("open", () => { app.online = true; $("room-warn").hidden = true; renderRoom(); });
     peer.on("connection", conn => {
@@ -237,7 +239,9 @@
     store.set("kozel-name", myName());
     app.role = "client"; app.code = code;
     $("join-msg").textContent = "Connecting…";
-    const peer = new Peer();
+    let peer;
+    try { peer = new Peer(); }
+    catch (e) { $("join-msg").textContent = "Online play isn't available in this browser."; return; }
     app.peer = peer;
     const fail = setTimeout(() => {
       if (!app.hostConn || !app.hostConn.open) $("join-msg").textContent = "Couldn't reach room " + code + ". Check the code, and ask the host to keep their page open.";
