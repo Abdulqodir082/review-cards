@@ -2,6 +2,7 @@
 """Create the user (MTProto) session interactively in the terminal.
 
 Run once:  python login.py        (or: docker compose run --rm exporter python login.py)
+No code arriving? python login.py --qr   (approve the login from your Telegram app)
 Log out:   python login.py --logout
 
 Login is deliberately NOT possible through the bot: Telegram invalidates login
@@ -14,6 +15,8 @@ import argparse
 import asyncio
 import getpass
 import os
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -75,6 +78,57 @@ def describe_code(sent) -> str:
     return text
 
 
+def _show_qr(url: str) -> None:
+    try:
+        import qrcode  # optional: pip install qrcode
+
+        qr = qrcode.QRCode(border=1)
+        qr.add_data(url)
+        qr.print_ascii(invert=True)
+    except ImportError:
+        pass
+    print(f"Login link: {url}")
+
+
+async def _ask_password(client: TelegramClient) -> int:
+    while True:
+        try:
+            await client.sign_in(password=getpass.getpass("Two-step verification password: "))
+            return 0
+        except errors.PasswordHashInvalidError:
+            print("Wrong password, try again.")
+
+
+async def _qr_sign_in(client: TelegramClient) -> int:
+    """Log in by approving a login token from an already logged-in Telegram app (no code needed)."""
+    print(
+        "\nQR / link login: approve this login from the Telegram app you are already using.\n"
+        "  * On this phone: Telegram opens automatically and asks to confirm the login.\n"
+        "  * Or on another device: Telegram > Settings > Devices > Link Desktop Device, scan the QR.\n"
+    )
+    can_open = shutil.which("termux-open-url") or shutil.which("xdg-open")
+    qr = await client.qr_login()
+    while True:
+        _show_qr(qr.url)
+        waiter = asyncio.ensure_future(qr.wait())
+        if can_open:
+            subprocess.Popen([can_open, qr.url], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            print("Opening Telegram… tap Confirm / Accept there, then come back here.")
+        try:
+            await waiter
+            return 0
+        except errors.SessionPasswordNeededError:
+            return await _ask_password(client)
+        except asyncio.TimeoutError:
+            pass
+        answer = await asyncio.to_thread(
+            input, "\nNot confirmed in time (links expire after ~30s). Enter = try again, q = quit: "
+        )
+        if answer.strip().lower() == "q":
+            return 1
+        await qr.recreate()
+
+
 async def _interactive_sign_in(client: TelegramClient) -> int:
     phone = input("Phone number (international format, e.g. +15551234567): ").strip()
     try:
@@ -106,9 +160,11 @@ async def _interactive_sign_in(client: TelegramClient) -> int:
 
     code_hash = sent.phone_code_hash
     while True:
-        code = input("Login code (r = resend another way, q = quit): ").strip()
+        code = input("Login code (r = resend another way, qr = log in with QR/link instead, q = quit): ").strip()
         if code.lower() == "q":
             return 1
+        if code.lower() == "qr":
+            return await _qr_sign_in(client)
         if code.lower() == "r":
             try:
                 sent = await client(functions.auth.ResendCodeRequest(phone, code_hash))
@@ -127,19 +183,14 @@ async def _interactive_sign_in(client: TelegramClient) -> int:
             await client.sign_in(phone, code, phone_code_hash=code_hash)
             return 0
         except errors.SessionPasswordNeededError:
-            while True:
-                try:
-                    await client.sign_in(password=getpass.getpass("Two-step verification password: "))
-                    return 0
-                except errors.PasswordHashInvalidError:
-                    print("Wrong password, try again.")
+            return await _ask_password(client)
         except errors.PhoneCodeInvalidError:
             print("That code is wrong — try again.")
         except errors.PhoneCodeExpiredError:
             print("That code has expired. Type r to get a new one, or q and run login.py again.")
 
 
-async def login(logout: bool) -> int:
+async def login(logout: bool, use_qr: bool = False) -> int:
     try:
         api_id, api_hash, session_dir = load_user_config()
     except ConfigError as exc:
@@ -173,7 +224,7 @@ async def login(logout: bool) -> int:
 
     await client.connect()
     if not await client.is_user_authorized():
-        result = await _interactive_sign_in(client)
+        result = await (_qr_sign_in(client) if use_qr else _interactive_sign_in(client))
         if result != 0:
             await client.disconnect()
             return result
@@ -191,8 +242,9 @@ async def login(logout: bool) -> int:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--logout", action="store_true", help="log out and revoke the session")
+    parser.add_argument("--qr", action="store_true", help="log in with a QR code / login link instead of a code")
     args = parser.parse_args()
-    sys.exit(asyncio.run(login(args.logout)))
+    sys.exit(asyncio.run(login(args.logout, args.qr)))
 
 
 if __name__ == "__main__":

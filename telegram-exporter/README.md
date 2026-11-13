@@ -94,6 +94,18 @@ your two-step verification password if you have one. The session is saved as
 `session`). `login.py` refuses to save it inside the project folder, and
 `*.session` is in `.gitignore`.
 
+**Login code never arrives?** Telegram sometimes silently withholds codes for
+apps created on my.telegram.org. Log in without a code instead:
+
+```bash
+pip install qrcode          # optional, draws the QR in the terminal
+python login.py --qr
+```
+
+On the same phone, the login link opens in Telegram, where you confirm it (Termux
+does this automatically). From another device, open Telegram → Settings → Devices →
+**Link Desktop Device** and scan the QR. You can also type `qr` at the code prompt.
+
 > ⚠️ The session file gives **full access to your account**. Never share or
 > commit it. To revoke it: `python login.py --logout`, or Telegram → Settings →
 > Devices → terminate "Chat Exporter".
