@@ -17,7 +17,8 @@ import os
 import sys
 from pathlib import Path
 
-from telethon import TelegramClient, errors
+from telethon import TelegramClient, errors, functions
+from telethon.tl import types
 
 from app.config import ConfigError, load_user_config
 
@@ -30,6 +31,112 @@ def _inside_repo(path: Path) -> bool:
         return True
     except ValueError:
         return False
+
+
+def describe_code(sent) -> str:
+    """Explain in plain words where Telegram sent the login code."""
+    t = getattr(sent, "type", None)
+    name = type(t).__name__
+    if name == "SentCodeTypeApp":
+        where = (
+            "as a MESSAGE in the Telegram app: open the chat named \"Telegram\" (blue checkmark)\n"
+            "  on any device where you are already logged in (check Archived Chats too)"
+        )
+    elif name in ("SentCodeTypeSms", "SentCodeTypeSmsWord", "SentCodeTypeSmsPhrase", "SentCodeTypeFirebaseSms"):
+        where = "by SMS to your phone"
+    elif name == "SentCodeTypeFragmentSms":
+        where = f"via fragment.com ({getattr(t, 'url', '')})"
+    elif name == "SentCodeTypeCall":
+        where = "by a PHONE CALL — a voice will read the code"
+    elif name == "SentCodeTypeFlashCall":
+        where = "by a short phone call — the code is the caller's number"
+    elif name == "SentCodeTypeMissedCall":
+        where = f"by a missed call — the code is the last {getattr(t, 'length', '?')} digits of the caller's number"
+    elif name == "SentCodeTypeEmailCode":
+        where = f"by EMAIL to {getattr(t, 'email_pattern', 'your login email')}"
+    elif name == "SentCodeTypeSetUpEmailRequired":
+        where = "nowhere yet: Telegram requires a login email on this account (see below)"
+    else:
+        where = f"by an unknown method ({name})"
+    text = f"Telegram sent the code {where}."
+    nxt = getattr(sent, "next_type", None)
+    if nxt is not None:
+        how = {
+            "CodeTypeSms": "SMS",
+            "CodeTypeCall": "a phone call",
+            "CodeTypeFlashCall": "a flash call",
+            "CodeTypeMissedCall": "a missed call",
+            "CodeTypeFragmentSms": "fragment.com",
+        }.get(type(nxt).__name__, type(nxt).__name__)
+        wait = getattr(sent, "timeout", None)
+        text += f"\nNot received? Type r to resend it by {how}" + (f" (possible after ~{wait}s)." if wait else ".")
+    else:
+        text += "\nNo other delivery method is offered for this account."
+    return text
+
+
+async def _interactive_sign_in(client: TelegramClient) -> int:
+    phone = input("Phone number (international format, e.g. +15551234567): ").strip()
+    try:
+        sent = await client.send_code_request(phone)
+    except errors.PhoneNumberInvalidError:
+        print("That phone number is not valid.", file=sys.stderr)
+        return 1
+    except errors.PhoneNumberBannedError:
+        print("Telegram reports this phone number as banned.", file=sys.stderr)
+        return 1
+    except errors.FloodWaitError as exc:
+        print(f"Too many attempts. Telegram asks to wait {exc.seconds} seconds.", file=sys.stderr)
+        return 1
+
+    if isinstance(sent, types.auth.SentCodeSuccess):
+        return 0
+    if isinstance(sent, types.auth.SentCodePaymentRequired):
+        print("Telegram requires a paid/Premium step to send a login code to this number.", file=sys.stderr)
+        return 1
+
+    print("\n" + describe_code(sent) + "\n")
+    if type(sent.type).__name__ == "SentCodeTypeSetUpEmailRequired":
+        print(
+            "Open Telegram > Settings > Privacy and Security > Login Email, add an email,\n"
+            "then run login.py again.",
+            file=sys.stderr,
+        )
+        return 1
+
+    code_hash = sent.phone_code_hash
+    while True:
+        code = input("Login code (r = resend another way, q = quit): ").strip()
+        if code.lower() == "q":
+            return 1
+        if code.lower() == "r":
+            try:
+                sent = await client(functions.auth.ResendCodeRequest(phone, code_hash))
+                code_hash = sent.phone_code_hash
+                print("\n" + describe_code(sent) + "\n")
+            except errors.SendCodeUnavailableError:
+                print("Telegram has no other way to send the code right now. Wait a few minutes and run login.py again.")
+            except errors.FloodWaitError as exc:
+                print(f"Too many attempts. Telegram asks to wait {exc.seconds} seconds.")
+            except errors.RPCError as exc:
+                print(f"Resend not possible yet: {exc.__class__.__name__}. Wait the time shown above and try again.")
+            continue
+        if not code:
+            continue
+        try:
+            await client.sign_in(phone, code, phone_code_hash=code_hash)
+            return 0
+        except errors.SessionPasswordNeededError:
+            while True:
+                try:
+                    await client.sign_in(password=getpass.getpass("Two-step verification password: "))
+                    return 0
+                except errors.PasswordHashInvalidError:
+                    print("Wrong password, try again.")
+        except errors.PhoneCodeInvalidError:
+            print("That code is wrong — try again.")
+        except errors.PhoneCodeExpiredError:
+            print("That code has expired. Type r to get a new one, or q and run login.py again.")
 
 
 async def login(logout: bool) -> int:
@@ -64,21 +171,12 @@ async def login(logout: bool) -> int:
             print("No active session.")
         return 0
 
-    try:
-        await client.start(
-            phone=lambda: input("Phone number (international format, e.g. +15551234567): ").strip(),
-            code_callback=lambda: input("Login code (from the Telegram app): ").strip(),
-            password=lambda: getpass.getpass("Two-step verification password: "),
-        )
-    except errors.PhoneNumberInvalidError:
-        print("That phone number is not valid.", file=sys.stderr)
-        return 1
-    except (errors.PhoneCodeInvalidError, errors.PhoneCodeExpiredError):
-        print("The code was wrong or expired. Run login.py again.", file=sys.stderr)
-        return 1
-    except errors.FloodWaitError as exc:
-        print(f"Too many attempts. Telegram asks to wait {exc.seconds} seconds.", file=sys.stderr)
-        return 1
+    await client.connect()
+    if not await client.is_user_authorized():
+        result = await _interactive_sign_in(client)
+        if result != 0:
+            await client.disconnect()
+            return result
 
     me = await client.get_me()
     await client.disconnect()
