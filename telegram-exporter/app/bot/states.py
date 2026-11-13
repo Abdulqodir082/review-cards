@@ -33,6 +33,7 @@ class UiState:
     selected: DialogItem | None = None
     options: ExportOptions = field(default_factory=ExportOptions)
     awaiting_dates: bool = False
+    awaiting_search: bool = False
 
     def dialogs_fresh(self) -> bool:
         return bool(self.dialogs) and time.monotonic() - self.dialogs_fetched_at < DIALOG_CACHE_SECONDS

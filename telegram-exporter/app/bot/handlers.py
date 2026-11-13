@@ -90,12 +90,17 @@ def register(ctx: BotContext) -> None:
     async def cmd_search(event: events.NewMessage.Event) -> None:
         query = (event.pattern_match.group("q") or "").strip()
         if not query:
-            await event.respond("Usage: /search <name or @username>")
+            state.awaiting_search = True
+            state.awaiting_dates = False
+            await event.respond("Send the chat name or @username to search for. /cancel to abort.")
             return
+        await run_search(event, query)
+
+    async def run_search(event: events.NewMessage.Event, query: str) -> None:
         await load_dialogs()
         results = state.search(query)
         if not results:
-            await event.respond(f"No chats match “{query}”.")
+            await event.respond(f"No chats match “{query}”. Try another name, or /chats to browse.")
             return
         state.listing, state.listing_title = results, f"Search: {query}"
         await event.respond(list_text(), buttons=dialogs_keyboard(results, 0))
@@ -118,9 +123,9 @@ def register(ctx: BotContext) -> None:
     async def cmd_cancel(event: events.NewMessage.Event) -> None:
         if jobs.busy:
             await jobs.cancel()
-        elif state.awaiting_dates:
-            state.awaiting_dates = False
-            await event.respond("Custom date input cancelled.")
+        elif state.awaiting_dates or state.awaiting_search:
+            state.awaiting_dates = state.awaiting_search = False
+            await event.respond("Cancelled.")
         else:
             await event.respond("Nothing to cancel.")
 
@@ -146,6 +151,10 @@ def register(ctx: BotContext) -> None:
 
     @bot.on(events.NewMessage(func=lambda e: is_owner_msg(e) and not (e.raw_text or "").startswith("/")))
     async def on_text(event: events.NewMessage.Event) -> None:
+        if state.awaiting_search:
+            state.awaiting_search = False
+            await run_search(event, event.raw_text or "")
+            return
         if not state.awaiting_dates:
             await event.respond("Send /chats to pick a chat, or /help.")
             return
@@ -221,6 +230,7 @@ def register(ctx: BotContext) -> None:
             preset = data[3:]
             if preset == "custom":
                 state.awaiting_dates = True
+                state.awaiting_search = False
                 await event.answer()
                 await event.respond(
                     "Send the date range as `YYYY-MM-DD YYYY-MM-DD` (both inclusive), "
