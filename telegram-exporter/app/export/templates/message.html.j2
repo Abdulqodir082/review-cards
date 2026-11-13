@@ -1,0 +1,158 @@
+{% macro media_block(media) %}
+       <div class="media_wrap clearfix">
+{% if media.display == "photo" %}
+        <a class="photo_wrap clearfix pull_left" href="{{ media.href }}">
+         <img class="photo" src="{{ media.href }}" style="width: {{ media.width }}px; height: {{ media.height }}px"/>
+        </a>
+{% elif media.display == "sticker" %}
+        <a class="sticker_wrap clearfix pull_left" href="{{ media.href }}">
+         <img class="sticker" src="{{ media.href }}" style="width: {{ media.width }}px; height: {{ media.height }}px"/>
+        </a>
+{% elif media.display == "sticker_video" %}
+        <a class="sticker_wrap clearfix pull_left" href="{{ media.href }}">
+         <video class="sticker" src="{{ media.href }}" autoplay loop muted playsinline style="width: {{ media.width }}px; height: {{ media.height }}px"></video>
+        </a>
+{% elif media.display == "video" %}
+        <a class="video_file_wrap clearfix pull_left" href="{{ media.href }}">
+         <div class="video_play_bg"><div class="video_play"></div></div>
+{% if media.kind == "animation" %}
+         <div class="video_duration">GIF</div>
+{% elif media.duration %}
+         <div class="video_duration">{{ media.duration }}</div>
+{% endif %}
+         <img class="video_file" src="{{ media.thumb }}" style="width: {{ media.width }}px; height: {{ media.height }}px"/>
+        </a>
+{% elif media.display == "round" %}
+        <a class="media_video clearfix pull_left round_video_wrap" href="{{ media.href }}">
+         <div class="video_play_bg"><div class="video_play"></div></div>
+{% if media.duration %}
+         <div class="video_duration">{{ media.duration }}</div>
+{% endif %}
+         <img class="round_video" src="{{ media.thumb }}" style="width: {{ media.width }}px; height: {{ media.height }}px"/>
+        </a>
+{% else %}
+{% if media.href %}
+        <a class="media clearfix pull_left block_link media_{{ media.kind }}" href="{{ media.href }}">
+{% else %}
+        <div class="media clearfix pull_left media_{{ media.kind }}">
+{% endif %}
+         <div class="fill pull_left"></div>
+         <div class="body">
+          <div class="title bold">{{ media.title }}</div>
+{% if media.status %}
+          <div class="status details">{{ media.status }}</div>
+{% endif %}
+         </div>
+{% if media.href %}
+        </a>
+{% else %}
+        </div>
+{% endif %}
+{% endif %}
+       </div>
+{% endmacro %}
+
+{% macro message(msg) %}
+{% if msg.service %}
+     <div class="message service" id="message{{ msg.id }}">
+      <div class="body details">{{ msg.service_html }}</div>
+     </div>
+{% else %}
+     <div class="message default clearfix{% if msg.joined %} joined{% endif %}" id="message{{ msg.id }}">
+{% if not msg.joined %}
+      <div class="pull_left userpic_wrap">
+       <div class="userpic {{ msg.userpic_class }}" style="width: 42px; height: 42px">
+        <div class="initials" style="line-height: 42px">{{ msg.initials }}</div>
+       </div>
+      </div>
+{% endif %}
+      <div class="body">
+       <div class="pull_right date details" title="{{ msg.date_title }}{% if msg.edited_title %}&#10;Edited: {{ msg.edited_title }}{% endif %}">{% if msg.edited_title %}<span class="edited">edited</span> {% endif %}{{ msg.time }}</div>
+{% if not msg.joined %}
+       <div class="from_name">
+        {{ msg.from_name }}{% if msg.via_bot %} <span class="details">via {{ msg.via_bot }}</span>{% endif %}
+
+       </div>
+{% endif %}
+{% if msg.forwarded_from %}
+       <div class="forwarded body">
+        <div class="from_name">Forwarded from {{ msg.forwarded_from }}</div>
+{% endif %}
+{% if msg.reply %}
+{% if msg.reply.missing %}
+       <div class="reply_to details">In reply to a message outside this export</div>
+{% else %}
+       <div class="reply_to details">
+        <a class="reply_preview" href="{{ msg.reply.href }}"{{ msg.reply.attrs }}>
+         <span class="reply_from">{{ msg.reply.from_name }}</span>
+         <span class="reply_text">{{ msg.reply.snippet }}</span>
+        </a>
+       </div>
+{% endif %}
+{% endif %}
+{% if msg.media %}
+{{ media_block(msg.media) }}
+{% endif %}
+{% if msg.poll %}
+       <div class="media_wrap clearfix">
+        <div class="media_poll">
+         <div class="question bold">{{ msg.poll.question }}</div>
+         <div class="details">{% if msg.poll.closed %}Final results{% else %}Poll{% endif %}</div>
+{% for answer in msg.poll.answers %}
+         <div class="answer">- {{ answer.text }} <span class="details">{{ answer.voters }} vote{% if answer.voters != 1 %}s{% endif %}{% if answer.chosen %}, chosen vote{% endif %}</span></div>
+{% endfor %}
+         <div class="total details">{{ msg.poll.total_voters }} vote{% if msg.poll.total_voters != 1 %}s{% endif %}</div>
+        </div>
+       </div>
+{% endif %}
+{% if msg.contact %}
+       <div class="media_wrap clearfix">
+        <div class="media clearfix pull_left media_contact">
+         <div class="fill pull_left"></div>
+         <div class="body">
+          <div class="title bold">{{ msg.contact.first_name }} {{ msg.contact.last_name }}</div>
+          <div class="status details">{{ msg.contact.phone_number }}</div>
+         </div>
+        </div>
+       </div>
+{% endif %}
+{% if msg.location %}
+       <div class="media_wrap clearfix">
+        <a class="media clearfix pull_left block_link media_location" href="{{ msg.map_href }}">
+         <div class="fill pull_left"></div>
+         <div class="body">
+          <div class="title bold">{% if msg.venue %}{{ msg.venue.title }}{% elif msg.location.live_period %}Live location{% else %}Location{% endif %}</div>
+          <div class="status details">{% if msg.venue and msg.venue.address %}{{ msg.venue.address }}{% else %}{{ msg.location.latitude }}, {{ msg.location.longitude }}{% endif %}</div>
+         </div>
+        </a>
+       </div>
+{% endif %}
+{% if msg.dice %}
+       <div class="media_wrap clearfix">
+        <div class="media clearfix pull_left media_dice">
+         <div class="body">
+          <div class="title bold">{{ msg.dice.emoji }} {{ msg.dice.value }}</div>
+         </div>
+        </div>
+       </div>
+{% endif %}
+{% if msg.text_html %}
+       <div class="text">{{ msg.text_html }}</div>
+{% endif %}
+{% if msg.forwarded_from %}
+       </div>
+{% endif %}
+{% if msg.author %}
+       <div class="signature details">{{ msg.author }}</div>
+{% endif %}
+{% if msg.reactions %}
+       <span class="reactions">
+{% for r in msg.reactions %}
+        <span class="reaction"><span class="emoji">{% if r.type == "emoji" %}{{ r.emoji }}{% elif r.type == "paid" %}⭐{% else %}❔{% endif %}</span><span class="count">{{ r.count }}</span></span>
+{% endfor %}
+       </span>
+{% endif %}
+      </div>
+     </div>
+{% endif %}
+{% endmacro %}

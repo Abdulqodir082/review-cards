@@ -1,0 +1,26 @@
+services:
+  exporter:
+    build: .
+    image: tg-chat-exporter:latest
+    container_name: tg-chat-exporter
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      # Paths inside the container; these override the values in .env.
+      SESSION_DIR: /data/session
+      EXPORT_DIR: /data/exports
+    volumes:
+      # The Telegram session lives in a named Docker volume, outside the repo.
+      - session:/data/session
+      # Exports, checkpoints and logs (bind mount so you can inspect them).
+      - ./exports:/data/exports
+    stdin_open: true   # needed for `docker compose run --rm exporter python login.py`
+    tty: true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  session:

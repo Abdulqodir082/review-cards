@@ -1,0 +1,19 @@
+# secrets & sessions — never commit these
+.env
+*.session
+*.session-journal
+session/
+
+# runtime data
+exports/
+data/
+*.zip
+*.zip.0*
+*.part
+
+# python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
