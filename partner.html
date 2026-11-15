@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Otvizcards — hamkor kabineti</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--teal:#0F9D8F;--deep:#0B7D72;--tint:#E4F5F2;--ink:#14171A;--muted:#5B6661;--muted2:#8A9692;--line:#E3E7E5;--canvas:#F5F7F6;--amber:#96690A;--amberbg:#FDF3DE}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Inter,system-ui,sans-serif;background:var(--canvas);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:860px;margin:0 auto;padding:0 16px}
+header{background:var(--ink);color:#fff;padding:18px 0 54px}
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+.brand{display:flex;align-items:center;gap:8px;font:700 17px Poppins,sans-serif}
+.lang{display:flex;border:1px solid rgba(255,255,255,.25);border-radius:999px;overflow:hidden}
+.lang button{background:none;border:0;color:#fff;font:600 12px Inter,sans-serif;padding:6px 11px;cursor:pointer;opacity:.6}
+.lang button.on{background:var(--teal);opacity:1}
+.hello{font:500 13px Inter,sans-serif;color:rgba(255,255,255,.6)}
+h1{font:800 26px/1.2 Poppins,sans-serif;letter-spacing:-.5px;margin-top:2px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:-36px}
+.tile{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px}
+.tile .k{font:600 10.5px/1.2 Inter,sans-serif;letter-spacing:.7px;text-transform:uppercase;color:var(--muted2);margin-bottom:8px}
+.tile .v{font:800 28px/1 Poppins,sans-serif;letter-spacing:-.8px}
+.tile.hi{background:var(--teal);border-color:var(--teal);color:#fff}
+.tile.hi .k{color:rgba(255,255,255,.8)}
+.tile .d{font:500 11.5px/1.3 Inter,sans-serif;color:var(--muted);margin-top:6px}
+.tile.hi .d{color:rgba(255,255,255,.85)}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;margin-top:14px;overflow:hidden}
+.card h2{font:700 15px Poppins,sans-serif;padding:16px 16px 4px}
+.card .sub{font:400 12.5px Inter,sans-serif;color:var(--muted);padding:0 16px 12px}
+.client{display:grid;grid-template-columns:1fr auto;gap:6px 14px;padding:14px 16px;border-top:1px solid var(--line)}
+.client .name{font:600 14.5px Inter,sans-serif}
+.client .meta{font:400 12px Inter,sans-serif;color:var(--muted2)}
+.client .fee{font:700 16px Poppins,sans-serif;color:var(--deep);text-align:right}
+.client .fee.wait{color:var(--muted2)}
+.badge{display:inline-block;padding:3px 8px;border-radius:5px;font:600 10.5px/1.3 Inter,sans-serif;margin-left:6px;vertical-align:middle}
+.badge.paid{background:var(--tint);color:var(--deep)}.badge.trial{background:var(--amberbg);color:var(--amber)}
+.rev{grid-column:1/-1;display:flex;align-items:center;gap:10px;font:500 12.5px Inter,sans-serif;color:var(--muted)}
+.rev b{color:var(--ink)}.rev .up{color:var(--deep);font-weight:700}
+.rev a{margin-left:auto;color:var(--deep);font-weight:600;text-decoration:none}
+.empty{padding:28px 16px;text-align:center;color:var(--muted);font:500 13.5px/1.6 Inter,sans-serif;border-top:1px solid var(--line)}
+.how{padding:4px 16px 16px;display:grid;gap:8px;font:400 13.5px/1.5 Inter,sans-serif;color:var(--muted)}
+.how b{color:var(--ink)}
+.cta{display:block;text-align:center;background:var(--ink);color:#fff;border-radius:12px;padding:14px;font:600 14px Inter,sans-serif;text-decoration:none;margin:14px 0 30px}
+.nope{max-width:420px;margin:80px auto;text-align:center;padding:0 20px;color:var(--muted)}
+.nope b{display:block;font:700 20px Poppins,sans-serif;color:var(--ink);margin-bottom:8px}
+body.ru [lang=uz],body:not(.ru) [lang=ru]{display:none!important}
+@media(max-width:640px){.kpis{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="tracking/sales.js"></script>
+<script>
+(function(){
+  var S = OtvizSales, esc = S.esc;
+  var lang = 'uz'; try { lang = localStorage.getItem('lang') || ((navigator.language||'').slice(0,2)==='ru'?'ru':'uz'); } catch(e){}
+  var code = new URLSearchParams(location.search).get('p') || '';
+  function t(uz, ru){ return '<span lang="uz">'+uz+'</span><span lang="ru">'+ru+'</span>'; }
+  function money(n){ return '$' + (Math.round(n*100)/100).toString(); }
+
+  function setLang(l){
+    lang = l; document.body.classList.toggle('ru', l==='ru'); document.documentElement.lang = l;
+    document.querySelectorAll('.lang button').forEach(function(b){ b.classList.toggle('on', b.dataset.l===l); });
+    try { localStorage.setItem('lang', l); } catch(e){}
+  }
+
+  S.loadAll().then(function(d){
+    var partner = d.partners.find(function(p){ return p.code === code; });
+    var app = document.getElementById('app');
+    if(!code || !partner){
+      app.innerHTML = '<div class="nope"><b>'+t('Havola topilmadi','Ссылка не найдена')+'</b>'+
+        t('Shaxsiy havolangizni Otvizcards’dan so‘rang.','Запросите личную ссылку у Otvizcards.')+'</div>';
+      setLang(lang); return;
+    }
+    var mine = d.businesses.filter(function(b){ return b.partner === code; });
+    var sum = S.summary(mine, [partner]).byPartner[code];
+    var feeCard = partner.fee_card != null ? partner.fee_card : 5, feePack = partner.fee_pack != null ? partner.fee_pack : 20;
+
+    var rows = mine.map(function(b){
+      var st = S.stats(d.history, b.card_id), paid = S.isPaid(b), fee = S.feeOf(b, partner);
+      var rev = st.after == null
+        ? t('Sharhlar hali kuzatilmayapti','Отзывы пока не отслеживаются')
+        : t('Sharhlar','Отзывы')+': <b>'+st.before+' → '+st.after+'</b> <span class="up">'+(st.growth>=0?'+':'')+st.growth+'</span>';
+      return '<div class="client">'+
+        '<div><div class="name">'+esc(b.name||'—')+'<span class="badge '+(paid?'paid':'trial')+'">'+(paid?t('To‘langan','Оплачено'):t('Sinov','Пробный'))+'</span></div>'+
+        '<div class="meta">'+t(S.productLabel(b,'uz'),S.productLabel(b,'ru'))+' · '+S.cardsOf(b)+' '+t('ta karta','карт')+(b.sold_on?' · '+esc(b.sold_on):'')+'</div></div>'+
+        '<div class="fee'+(paid?'':' wait')+'">'+(paid?money(fee):'—')+'</div>'+
+        '<div class="rev">'+rev+(b.card_id?'<a href="report.html?id='+encodeURIComponent(b.card_id)+'">'+t('Hisobot','Отчёт')+' →</a>':'')+'</div>'+
+      '</div>';
+    }).join('');
+
+    app.innerHTML =
+      '<header><div class="wrap"><div class="top"><div class="brand">'+
+        '<svg width="22" height="22" viewBox="0 0 100 100"><path fill="#0f9d8f" fill-rule="evenodd" d="M50 4l13.5 29.6 32.4 3.6-24.1 21.9 6.8 31.9L50 74.6 21.4 91l6.8-31.9L4.1 37.2l32.4-3.6zM50 38a12 12 0 100 24 12 12 0 000-24z"/></svg>Otvizcards</div>'+
+        '<div class="lang"><button data-l="uz">UZ</button><button data-l="ru">RU</button></div></div>'+
+        '<div class="hello">'+t('Hamkor kabineti','Кабинет партнёра')+'</div><h1>'+esc(partner.name||code)+'</h1></div></header>'+
+      '<div class="wrap">'+
+        '<div class="kpis">'+
+          '<div class="tile hi"><div class="k">'+t('Olishingiz kerak','К выплате')+'</div><div class="v">'+money(sum.owed)+'</div><div class="d">'+t('to‘langan','выплачено')+': '+money(sum.paid)+'</div></div>'+
+          '<div class="tile"><div class="k">'+t('Jami ishlab topilgan','Всего заработано')+'</div><div class="v">'+money(sum.earned)+'</div></div>'+
+          '<div class="tile"><div class="k">'+t('Sotilgan kartalar','Продано карт')+'</div><div class="v">'+sum.cards+'</div><div class="d">'+sum.clients+' '+t('ta mijoz','клиентов')+'</div></div>'+
+          '<div class="tile"><div class="k">'+t('Sinovda','На пробном')+'</div><div class="v">'+sum.trials+'</div><div class="d">'+t('to‘lasa, ulush qo‘shiladi','оплатят — начислим долю')+'</div></div>'+
+        '</div>'+
+        '<div class="card"><h2>'+t('Sizning mijozlaringiz','Ваши клиенты')+'</h2><div class="sub">'+t('Siz tavsiya qilgan bizneslar va ularning natijalari','Бизнесы по вашей рекомендации и их результаты')+'</div>'+
+          (rows || '<div class="empty">'+t('Hali mijoz yo‘q. Birinchi biznesni tavsiya qiling: uning egasi Instagram Direct’ga sizning ismingizni aytib yozsin.','Клиентов пока нет. Порекомендуйте первый бизнес: пусть владелец напишет в Instagram Direct и назовёт ваше имя.')+'</div>')+
+        '</div>'+
+        '<div class="card"><h2>'+t('Qanday ishlaydi','Как это работает')+'</h2><div class="how">'+
+          '<div><b>'+money(feeCard)+'</b> '+t('har bir sotilgan karta uchun','за каждую проданную карту')+' · <b>'+money(feePack)+'</b> '+t('6 talik to‘plam uchun','за набор из 6 стендов')+'</div>'+
+          '<div>'+t('Ulush mijoz to‘lagan kuni hisoblanadi va shu sahifada ko‘rinadi.','Доля начисляется в день оплаты клиента и появляется на этой странице.')+'</div>'+
+          '<div>'+t('Narxlar: stend yoki stiker $25, ikkalasi $40, qo‘shimcha karta $12, 6 ta stend $100.','Цены: стенд или стикер $25, оба $40, доп. карта $12, 6 стендов $100.')+'</div>'+
+        '</div></div>'+
+        '<a class="cta" href="https://ig.me/m/otvizcards.uz">'+t('Yangi mijoz haqida yozish','Сообщить о новом клиенте')+'</a>'+
+      '</div>';
+    document.querySelectorAll('.lang button').forEach(function(b){ b.onclick = function(){ setLang(b.dataset.l); }; });
+    setLang(lang);
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+{
+  "_help": "One entry per referral partner. Add and edit them from dashboard.html (+ Add partner). code is the private part of the partner's link: partner.html?p=<code>. fee_card / fee_pack are dollars per card and per 6-stand pack. paid_usd is what you have already paid them.",
+  "partners": []
+}
