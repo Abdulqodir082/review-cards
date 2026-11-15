@@ -91,3 +91,14 @@ Each record looks like:
 ```
 
 Running twice in one day won't create duplicates — same business + same date is skipped.
+
+## Sales, partners and client reports
+
+`dashboard.html` also tracks sales against the goal and what each referral partner has earned.
+
+- **Record a sale:** click a business name (or `+ Add business`), set Plan to `Paid`, pick the Product, and pick the Partner who brought the client (or leave it as a direct sale). Cards and price fill in from the product unless you type your own.
+- **Partners:** `+ Add partner` creates the partner in `tracking/partners.json` with a private code. `Copy link` gives their page, `partner.html?p=<code>`, which shows only their clients, cards sold, earnings and what is still owed. Update "Already paid" when you pay them.
+- **Client report:** every business has `report.html?id=<card id>`: reviews before and now, rating, a chart and the 10-reviews guarantee status. Send this link as the monthly report. Both pages switch between Uzbek and Russian.
+- The shared maths lives in `tracking/sales.js` (products, prices, partner fees).
+
+This repository is public, so these pages are private only in the sense that nobody can guess the link. Do not store phone numbers or anything sensitive in the JSON files.

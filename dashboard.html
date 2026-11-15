@@ -109,7 +109,24 @@
   .modal .msg{font:500 12px/1.4 Inter,sans-serif;margin-top:12px;display:none;padding:10px 12px;border-radius:8px}
   .modal .msg.ok{display:block;background:var(--activeBg);color:var(--deep)}
   .modal .msg.err{display:block;background:#FBE9E7;color:#A8342A}
+  /* Sales goal + partners */
+  .sales{display:grid;grid-template-columns:336px 1fr;gap:14px;padding:14px 22px 0}
+  .goal .big{font:700 34px/1 Poppins,sans-serif;letter-spacing:-1px;margin-top:14px}
+  .goal .big small{font:500 13px/1 Inter,sans-serif;color:var(--muted);letter-spacing:0}
+  .gbar{height:8px;border-radius:4px;background:var(--rowline);overflow:hidden;margin:12px 0 8px}
+  .gbar i{display:block;height:8px;border-radius:4px;background:var(--teal)}
+  .gnote{font:500 11.5px/1.4 Inter,sans-serif;color:var(--muted)}
+  .gnote.behind{color:#A8342A}
+  .mini{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+  .mini div{background:var(--canvas);border-radius:8px;padding:10px}
+  .mini .k{font:600 9.5px/1 Inter,sans-serif;letter-spacing:.8px;color:var(--muted2);text-transform:uppercase;margin-bottom:6px}
+  .mini .v{font:700 16px/1 Poppins,sans-serif}
+  .linkbtn{border:0;background:none;color:var(--deep);font:600 11.5px/1 Inter,sans-serif;cursor:pointer;padding:0;text-decoration:none}
+  .bizlink{cursor:pointer}
+  .bizlink:hover{color:var(--deep)}
+  .modal{max-height:92vh;overflow:auto}
   @media(max-width:900px){
+    .sales{grid-template-columns:1fr}
     .side{display:none} .kpis{grid-template-columns:1fr 1fr} .grid{grid-template-columns:1fr}
     .topbar{flex-wrap:wrap;height:auto;padding:12px}
   }
@@ -153,6 +170,23 @@
       <div class="tile"><div class="k">Total reviews</div><div class="v" id="k2">—</div><div class="d flat" id="k2d">&nbsp;</div></div>
       <div class="tile"><div class="k">Avg rating</div><div class="v" id="k3">—</div><div class="d flat" id="k3d">&nbsp;</div></div>
       <div class="tile"><div class="k">Businesses tracked</div><div class="v" id="k4">—</div><div class="d flat" id="k4d">&nbsp;</div></div>
+    </div>
+
+    <!-- Sales goal + partners -->
+    <div class="sales">
+      <div class="panel goal">
+        <h2>Sales goal</h2>
+        <div id="goalArea"><div class="empty">Loading…</div></div>
+      </div>
+      <div class="panel" style="padding:0;overflow:hidden">
+        <div class="card-hd">
+          <h2>Partners</h2>
+          <div class="sub">each partner sees only their own page</div>
+          <div class="spacer"></div>
+          <button class="btn" id="addPartnerBtn">+ Add partner</button>
+        </div>
+        <div id="partnerArea"><div class="loading">Loading…</div></div>
+      </div>
     </div>
 
     <!-- Chart + logger -->
@@ -226,6 +260,26 @@
       </div>
     </div>
 
+    <div class="two">
+      <div><div class="lbl">Product</div>
+        <select class="field" id="bizProduct">
+          <option value="">— not sold yet —</option>
+          <option value="stand">Stand · $25</option>
+          <option value="sticker">Sticker · $25</option>
+          <option value="both">Stand + sticker · $40</option>
+          <option value="extra">Extra card · $12 each</option>
+          <option value="pack6">Table pack (6 stands) · $100</option>
+        </select>
+      </div>
+      <div><div class="lbl">Cards</div><input class="field" id="bizCards" type="number" min="1" placeholder="auto"></div>
+    </div>
+    <div class="two">
+      <div><div class="lbl">Price paid, $</div><input class="field" id="bizPrice" type="number" min="0" step="1" placeholder="auto"></div>
+      <div><div class="lbl">Sold on</div><input class="field" id="bizSold" type="date"></div>
+    </div>
+    <div class="lbl">Partner who brought them</div>
+    <select class="field" id="bizPartner"></select>
+
     <div class="lbl">Google Place ID <span style="color:var(--muted2);font-weight:400;letter-spacing:0;text-transform:none">— optional</span></div>
     <input class="field" id="bizPlace" placeholder="ChIJ…  (leave empty for manual tracking)">
     <div class="sub" style="margin:6px 0 0">Only needed for <b>automatic</b> daily fetching. Leave it blank to track this business <b>manually</b> — you'll enter the review count yourself via “Log a review count”. Place IDs come from <a class="link" href="https://developers.google.com/maps/documentation/places/web-service/place-id" target="_blank" rel="noopener">Google's Place ID Finder</a>.</div>
@@ -241,11 +295,39 @@
   </div>
 </div>
 
+<!-- Add / edit partner modal -->
+<div class="overlay" id="partnerOverlay">
+  <div class="modal">
+    <h2 id="partnerTitle">Add partner</h2>
+    <div class="sub">A partner gets a private link that shows only their clients, cards and earnings.</div>
+    <div class="lbl">Partner name</div>
+    <input class="field" id="pName" placeholder="Aziz SMM">
+    <div class="two">
+      <div><div class="lbl">Fee per card, $</div><input class="field" id="pFeeCard" type="number" min="0" step="1" value="5"></div>
+      <div><div class="lbl">Fee per 6-pack, $</div><input class="field" id="pFeePack" type="number" min="0" step="1" value="20"></div>
+    </div>
+    <div class="two">
+      <div><div class="lbl">Already paid, $</div><input class="field" id="pPaid" type="number" min="0" step="1" value="0"></div>
+      <div><div class="lbl">Contact (optional)</div><input class="field" id="pContact" placeholder="@instagram"></div>
+    </div>
+    <div class="lbl">GitHub token (Contents: Read &amp; write)</div>
+    <input class="field" id="pToken" type="password" placeholder="github_pat_…" autocomplete="off">
+    <div class="acts">
+      <button class="save" id="pSave">Save partner</button>
+      <button class="cancel" id="pCancel">Cancel</button>
+    </div>
+    <div class="msg" id="pMsg"></div>
+  </div>
+</div>
+
+<script src="tracking/sales.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 const OWNER = 'Abdulqodir082', REPO = 'review-cards', BRANCH = 'main';
 let HISTORY = [];      // all snapshot records
-let BUSINESSES = [];   // from tracking/businesses.json (name, card_id, place_id, plan)
+let BUSINESSES = [];   // from tracking/businesses.json (name, card_id, place_id, plan, product, cards, price_usd, sold_on, partner)
+let PARTNERS = [];     // from tracking/partners.json (code, name, fee_card, fee_pack, paid_usd, contact)
+const GOAL = { cards: 50, start: '2026-11-16', by: '2026-12-31' };   // sales goal shown on the dashboard
 let range = '90';      // '30' | '90' | '365' | 'all'
 
 const nf = new Intl.NumberFormat('en-US');
@@ -254,14 +336,17 @@ function ymd(d){ return d.toISOString().slice(0,10); }
 
 async function loadData(){
   const bust = '?t=' + Date.now();
-  const [hRes, bRes] = await Promise.all([
+  const [hRes, bRes, pRes] = await Promise.all([
     fetch('tracking-history.json' + bust, {cache:'no-store'}),
-    fetch('tracking/businesses.json' + bust, {cache:'no-store'}).catch(()=>null)
+    fetch('tracking/businesses.json' + bust, {cache:'no-store'}).catch(()=>null),
+    fetch('tracking/partners.json' + bust, {cache:'no-store'}).catch(()=>null)
   ]);
   HISTORY = hRes.ok ? await hRes.json() : [];
   if(!Array.isArray(HISTORY)) HISTORY = [];
   try { const b = bRes && bRes.ok ? await bRes.json() : null; BUSINESSES = (b && b.businesses) || []; }
   catch(e){ BUSINESSES = []; }
+  try { const p = pRes && pRes.ok ? await pRes.json() : null; PARTNERS = (p && p.partners) || []; }
+  catch(e){ PARTNERS = []; }
 }
 
 // Group records by business (keyed by card_id), sorted by date ascending.
@@ -404,16 +489,17 @@ function renderTable(c){
     const pct = r.before ? Math.round((r.growth/r.before)*100) : (r.growth>0?100:0);
     const barW = Math.round((Math.abs(r.growth)/maxGrowth)*100);
     body += '<tr>'+
-      '<td><div class="biz">'+esc(r.name||'—')+'</div><div class="metasm">'+(r.card_id?('card '+esc(r.card_id)+' · '):'')+r.snaps+' snapshot'+(r.snaps===1?'':'s')+'</div></td>'+
+      '<td><div class="biz bizlink" data-edit="'+esc(r.card_id||'')+'" title="Edit">'+esc(r.name||'—')+'</div><div class="metasm">'+(r.card_id?('card '+esc(r.card_id)+' · '):'')+r.snaps+' snapshot'+(r.snaps===1?'':'s')+'</div></td>'+
       '<td class="r" style="color:var(--muted)">'+fmt(r.before)+'</td>'+
       '<td class="r"><b>'+fmt(r.after)+'</b></td>'+
       '<td><div class="bar"><div class="track"><div class="fill" style="width:'+barW+'%"></div></div><span class="pct">'+(r.growth>=0?'+':'')+fmt(r.growth)+'</span></div></td>'+
       '<td class="r">'+(typeof r.rating==='number'?r.rating.toFixed(1):'—')+'</td>'+
       '<td><span class="badge '+r.plan.cls+'">'+r.plan.label+'</span></td>'+
+      '<td class="r">'+(r.card_id?'<a class="linkbtn" target="_blank" href="report.html?id='+encodeURIComponent(r.card_id)+'">Report ↗</a>':'')+'</td>'+
       '</tr>';
   }
   area.innerHTML = '<table><thead><tr>'+
-    '<th>BUSINESS</th><th class="r">BEFORE</th><th class="r">AFTER</th><th>GROWTH</th><th class="r">RATING</th><th>PLAN</th>'+
+    '<th>BUSINESS</th><th class="r">BEFORE</th><th class="r">AFTER</th><th>GROWTH</th><th class="r">RATING</th><th>PLAN</th><th class="r">CLIENT REPORT</th>'+
     '</tr></thead><tbody>'+body+'</tbody></table>';
 }
 
@@ -438,9 +524,53 @@ function renderRecent(){
 
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
+// ---- Sales goal + partners ----
+function money(n){ return '$' + nf.format(Math.round(n)); }
+function partnerUrl(code){ return location.href.replace(/[^/]*$/, '') + 'partner.html?p=' + encodeURIComponent(code); }
+function renderSales(){
+  const sum = OtvizSales.summary(BUSINESSES, PARTNERS);
+  const pct = Math.min(100, Math.round(sum.cards / GOAL.cards * 100));
+  const today = ymd(new Date());
+  const total = (Date.parse(GOAL.by) - Date.parse(GOAL.start)) / 864e5;
+  const gone = Math.max(0, Math.min(total, (Date.parse(today) - Date.parse(GOAL.start)) / 864e5));
+  const expected = Math.round(GOAL.cards * gone / total);
+  const left = Math.max(0, Math.ceil((Date.parse(GOAL.by) - Date.parse(today)) / 864e5));
+  const behind = sum.cards < expected;
+  $('goalArea').innerHTML =
+    '<div class="big">'+fmt(sum.cards)+' <small>of '+GOAL.cards+' cards by '+GOAL.by+'</small></div>'+
+    '<div class="gbar"><i style="width:'+pct+'%"></i></div>'+
+    '<div class="gnote'+(behind?' behind':'')+'">'+(behind ? (expected - sum.cards)+' behind pace' : 'On pace')+
+      ' · '+left+' days left · '+fmt(sum.clients)+' paying clients, '+fmt(sum.trials)+' on trial</div>'+
+    '<div class="mini">'+
+      '<div><div class="k">Revenue</div><div class="v">'+money(sum.revenue)+'</div></div>'+
+      '<div><div class="k">Partner fees</div><div class="v">'+money(sum.fees)+'</div></div>'+
+      '<div><div class="k">Owed now</div><div class="v">'+money(sum.owed)+'</div></div>'+
+    '</div>';
+
+  const area = $('partnerArea');
+  if(!PARTNERS.length){
+    area.innerHTML = '<div class="empty">No partners yet. Add one, then send them their private link.</div>';
+    return;
+  }
+  let body = '';
+  for(const p of PARTNERS){
+    const s = sum.byPartner[p.code];
+    body += '<tr>'+
+      '<td><div class="biz bizlink" data-partner="'+esc(p.code)+'" title="Edit">'+esc(p.name||p.code)+'</div><div class="metasm">'+esc(p.contact||'')+'</div></td>'+
+      '<td class="r">'+fmt(s.clients)+(s.trials?' <span style="color:var(--muted2)">+'+s.trials+' trial</span>':'')+'</td>'+
+      '<td class="r"><b>'+fmt(s.cards)+'</b></td>'+
+      '<td class="r">'+money(s.earned)+'</td>'+
+      '<td class="r"><b>'+money(s.owed)+'</b></td>'+
+      '<td class="r"><button class="linkbtn" data-copy="'+esc(p.code)+'">Copy link</button> · <a class="linkbtn" target="_blank" href="partner.html?p='+encodeURIComponent(p.code)+'">Open ↗</a></td>'+
+      '</tr>';
+  }
+  area.innerHTML = '<table><thead><tr><th>PARTNER</th><th class="r">CLIENTS</th><th class="r">CARDS</th><th class="r">EARNED</th><th class="r">OWED</th><th class="r">THEIR PAGE</th></tr></thead><tbody>'+body+'</tbody></table>';
+}
+
 function renderAll(){
   const c = compute();
   renderKPIs(c);
+  renderSales();
   renderChart();
   renderTable(c);
   renderRecent();
@@ -528,9 +658,18 @@ async function saveSnapshot(){
 
 // ---- Add business (commits to tracking/businesses.json) ----
 function bizMsg(ok,text){ const m=$('bizMsg'); m.className='msg '+(ok?'ok':'err'); m.textContent=text; }
-function openAddBiz(){
-  $('bizTitle').textContent='Add business';
-  $('bizName').value=''; $('bizCard').value=''; $('bizPlace').value=''; $('bizPlan').value='';
+function openAddBiz(cardId){
+  const b = (typeof cardId === 'string' && BUSINESSES.find(x => x.card_id === cardId)) || null;
+  $('bizTitle').textContent = b ? 'Edit business' : 'Add business';
+  $('bizSave').textContent = b ? 'Save changes' : 'Add business';
+  $('bizName').value = b ? (b.name||'') : (typeof cardId === 'string' ? ((HISTORY.find(r=>r.card_id===cardId)||{}).business_name||'') : '');
+  $('bizCard').value = b ? (b.card_id||'') : (typeof cardId === 'string' ? cardId : '');
+  $('bizPlace').value = b ? (b.place_id||'') : ''; $('bizPlan').value = b ? (b.plan||'') : '';
+  $('bizProduct').value = b ? (b.product||'') : ''; $('bizCards').value = b && b.cards!=null ? b.cards : '';
+  $('bizPrice').value = b && b.price_usd!=null ? b.price_usd : ''; $('bizSold').value = b ? (b.sold_on||'') : '';
+  $('bizPartner').innerHTML = '<option value="">— direct sale, no partner —</option>' +
+    PARTNERS.map(p => '<option value="'+esc(p.code)+'">'+esc(p.name||p.code)+'</option>').join('');
+  $('bizPartner').value = b ? (b.partner||'') : '';
   bizMsg(true,''); $('bizMsg').className='msg';
   try{ const t=localStorage.getItem('otvizDashToken'); if(t) $('bizToken').value=t; }catch(e){}
   $('bizOverlay').classList.add('show');
@@ -564,20 +703,85 @@ async function saveBiz(){
     row.name = name;
     row.place_id = place;
     if(plan) row.plan = plan; else delete row.plan;
+    const setOrDel = (k, v) => { if(v === '' || v == null) delete row[k]; else row[k] = v; };
+    setOrDel('product', $('bizProduct').value);
+    setOrDel('cards', $('bizCards').value === '' ? '' : Number($('bizCards').value));
+    setOrDel('price_usd', $('bizPrice').value === '' ? '' : Number($('bizPrice').value));
+    setOrDel('sold_on', $('bizSold').value || (plan === 'paid' && !row.sold_on ? ymd(new Date()) : (row.sold_on||'')));
+    setOrDel('partner', $('bizPartner').value);
 
     const put=await fetch(api,{method:'PUT',headers:ghHeaders(token),
       body:JSON.stringify({message:'Add/update tracked business: '+name, content:b64encode(JSON.stringify(data,null,2)+'\n'), sha:meta.sha, branch:BRANCH})});
     if(!put.ok){ const e=await put.json().catch(()=>({})); bizMsg(false,'Save failed ('+put.status+'): '+(e.message||'')); $('bizSave').disabled=false; return; }
     BUSINESSES=data.businesses;
-    bizMsg(true,'✓ Added. The daily job will collect its numbers on the next run.');
+    bizMsg(true,'✓ Saved. The daily job collects review numbers on its next run.');
     populateLogger(); renderAll();
     setTimeout(closeAddBiz, 1200);
   }catch(e){ bizMsg(false,'Error: '+e.message); }
   finally{ $('bizSave').disabled=false; }
 }
 
+// ---- Partners ----
+let editingPartner = null;
+function pMsg(ok,text){ const m=$('pMsg'); m.className='msg '+(ok?'ok':'err'); m.textContent=text; }
+function makeCode(name){
+  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,16) || 'partner';
+  const rnd = Array.from(crypto.getRandomValues(new Uint8Array(6)), b => 'abcdefghjkmnpqrstuvwxyz23456789'[b % 31]).join('');
+  return slug + '-' + rnd;   // the random part keeps the link private
+}
+function openPartner(code){
+  const p = (typeof code === 'string' && PARTNERS.find(x => x.code === code)) || null;
+  editingPartner = p ? p.code : null;
+  $('partnerTitle').textContent = p ? 'Edit partner' : 'Add partner';
+  $('pName').value = p ? (p.name||'') : ''; $('pContact').value = p ? (p.contact||'') : '';
+  $('pFeeCard').value = p && p.fee_card!=null ? p.fee_card : 5; $('pFeePack').value = p && p.fee_pack!=null ? p.fee_pack : 20;
+  $('pPaid').value = p && p.paid_usd!=null ? p.paid_usd : 0;
+  $('pMsg').className='msg';
+  try{ const t=localStorage.getItem('otvizDashToken'); if(t) $('pToken').value=t; }catch(e){}
+  $('partnerOverlay').classList.add('show');
+}
+function closePartner(){ $('partnerOverlay').classList.remove('show'); }
+async function savePartner(){
+  const name=$('pName').value.trim(), token=$('pToken').value.trim();
+  if(!name){ pMsg(false,'Enter the partner name.'); return; }
+  if(!token){ pMsg(false,'Paste a GitHub token with Contents: Read & write.'); return; }
+  try{ localStorage.setItem('otvizDashToken', token); }catch(e){}
+  $('pSave').disabled=true; pMsg(true,'Saving…');
+  const api='https://api.github.com/repos/'+OWNER+'/'+REPO+'/contents/tracking/partners.json';
+  try{
+    const gr=await fetch(api+'?ref='+BRANCH+'&t='+Date.now(), {headers:ghHeaders(token), cache:'no-store'});
+    let data={partners:[]}, sha;
+    if(gr.ok){ const meta=await gr.json(); sha=meta.sha; data=JSON.parse(decodeURIComponent(escape(atob(meta.content.replace(/\n/g,''))))); }
+    else if(gr.status!==404){ const e=await gr.json().catch(()=>({})); pMsg(false,'Load failed ('+gr.status+'): '+(e.message||'')); return; }
+    if(!Array.isArray(data.partners)) data.partners=[];
+    let row = editingPartner && data.partners.find(p=>p.code===editingPartner);
+    if(!row){ row={ code: makeCode(name), added_on: ymd(new Date()) }; data.partners.push(row); }
+    row.name=name; row.contact=$('pContact').value.trim();
+    row.fee_card=Number($('pFeeCard').value)||0; row.fee_pack=Number($('pFeePack').value)||0; row.paid_usd=Number($('pPaid').value)||0;
+    const body={message:'Add/update partner: '+name, content:b64encode(JSON.stringify(data,null,2)+'\n'), branch:BRANCH};
+    if(sha) body.sha=sha;
+    const put=await fetch(api,{method:'PUT',headers:ghHeaders(token),body:JSON.stringify(body)});
+    if(!put.ok){ const e=await put.json().catch(()=>({})); pMsg(false,'Save failed ('+put.status+'): '+(e.message||'')); return; }
+    PARTNERS=data.partners;
+    pMsg(true,'✓ Saved. Their page goes live in about a minute.');
+    renderAll();
+    setTimeout(closePartner, 1200);
+  }catch(e){ pMsg(false,'Error: '+e.message); }
+  finally{ $('pSave').disabled=false; }
+}
+
 // ---- wire up ----
-$('addBizBtn').onclick = openAddBiz;
+$('addPartnerBtn').onclick = () => openPartner();
+$('pCancel').onclick = closePartner;
+$('pSave').onclick = savePartner;
+$('partnerOverlay').addEventListener('click', e=>{ if(e.target===$('partnerOverlay')) closePartner(); });
+document.addEventListener('click', e=>{
+  const ed = e.target.closest('[data-edit]'); if(ed && ed.dataset.edit){ openAddBiz(ed.dataset.edit); return; }
+  const pe = e.target.closest('[data-partner]'); if(pe){ openPartner(pe.dataset.partner); return; }
+  const cp = e.target.closest('[data-copy]');
+  if(cp){ navigator.clipboard.writeText(partnerUrl(cp.dataset.copy)).then(()=>{ const t=cp.textContent; cp.textContent='Copied ✓'; setTimeout(()=>cp.textContent=t,1400); }); }
+});
+$('addBizBtn').onclick = () => openAddBiz();
 $('bizCancel').onclick = closeAddBiz;
 $('bizSave').onclick = saveBiz;
 $('bizOverlay').addEventListener('click', e=>{ if(e.target===$('bizOverlay')) closeAddBiz(); });

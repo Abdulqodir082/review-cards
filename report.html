@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Otvizcards — sharhlar hisoboti</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--teal:#0F9D8F;--deep:#0B7D72;--tint:#E4F5F2;--ink:#14171A;--muted:#5B6661;--muted2:#8A9692;--line:#E3E7E5;--canvas:#F5F7F6;--star:#FBBC04}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Inter,system-ui,sans-serif;background:var(--canvas);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:720px;margin:0 auto;padding:0 16px}
+header{background:var(--ink);color:#fff;padding:18px 0 28px}
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.brand{display:flex;align-items:center;gap:8px;font:700 17px Poppins,sans-serif}
+.lang{display:flex;border:1px solid rgba(255,255,255,.25);border-radius:999px;overflow:hidden}
+.lang button{background:none;border:0;color:#fff;font:600 12px Inter,sans-serif;padding:6px 11px;cursor:pointer;opacity:.6}
+.lang button.on{background:var(--teal);opacity:1}
+.eyebrow{font:600 12px Inter,sans-serif;letter-spacing:1px;text-transform:uppercase;color:#7fe0d5}
+h1{font:800 28px/1.2 Poppins,sans-serif;letter-spacing:-.6px;margin:4px 0 6px}
+.period{font:400 13px Inter,sans-serif;color:rgba(255,255,255,.6)}
+.hero{background:linear-gradient(135deg,var(--teal),#0a6f66);color:#fff;border-radius:18px;padding:26px;margin-top:16px;text-align:center}
+.hero .big{font:800 72px/1 Poppins,sans-serif;letter-spacing:-2px}
+.hero .cap{font:600 16px Inter,sans-serif;opacity:.95;margin-top:6px}
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
+.tile{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;text-align:center}
+.tile .k{font:600 10.5px/1.2 Inter,sans-serif;letter-spacing:.7px;text-transform:uppercase;color:var(--muted2);margin-bottom:8px}
+.tile .v{font:800 30px/1 Poppins,sans-serif;letter-spacing:-.8px}
+.tile .v .st{color:var(--star);font-size:22px}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;margin-top:10px;padding:18px}
+.card h2{font:700 15px Poppins,sans-serif;margin-bottom:10px}
+.card p{font:400 14px/1.6 Inter,sans-serif;color:var(--muted)}
+.card p b{color:var(--ink)}
+svg text{font:500 10.5px Inter,sans-serif;fill:#8A9692}
+.guar{display:flex;gap:12px;align-items:center}
+.dot{flex:none;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font:800 18px Poppins,sans-serif}
+.dot.ok{background:var(--tint);color:var(--deep)}.dot.go{background:#FDF3DE;color:#96690A}
+.cta{display:block;text-align:center;background:var(--ink);color:#fff;border-radius:12px;padding:14px;font:600 14px Inter,sans-serif;text-decoration:none;margin:14px 0 10px}
+.foot{text-align:center;font:400 12px Inter,sans-serif;color:var(--muted2);padding-bottom:28px}
+.nope{max-width:420px;margin:80px auto;text-align:center;padding:0 20px;color:var(--muted)}
+.nope b{display:block;font:700 20px Poppins,sans-serif;color:var(--ink);margin-bottom:8px}
+body.ru [lang=uz],body:not(.ru) [lang=ru]{display:none!important}
+@media print{header{-webkit-print-color-adjust:exact;print-color-adjust:exact}.cta,.lang{display:none}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="tracking/sales.js"></script>
+<script>
+(function(){
+  var S = OtvizSales, esc = S.esc;
+  var lang = 'uz'; try { lang = localStorage.getItem('lang') || ((navigator.language||'').slice(0,2)==='ru'?'ru':'uz'); } catch(e){}
+  var id = new URLSearchParams(location.search).get('id') || '';
+  function t(uz, ru){ return '<span lang="uz">'+uz+'</span><span lang="ru">'+ru+'</span>'; }
+  function setLang(l){
+    lang = l; document.body.classList.toggle('ru', l==='ru'); document.documentElement.lang = l;
+    document.querySelectorAll('.lang button').forEach(function(b){ b.classList.toggle('on', b.dataset.l===l); });
+    try { localStorage.setItem('lang', l); } catch(e){}
+  }
+  function days(a, b){ return Math.round((Date.parse(b) - Date.parse(a)) / 864e5); }
+
+  function chart(snaps){
+    if(snaps.length < 2) return '';
+    var W = 660, H = 190, L = 34, R = 12, T = 12, B = 26;
+    var t0 = Date.parse(snaps[0].date), t1 = Date.parse(snaps[snaps.length-1].date) || t0 + 1;
+    var lo = Math.min.apply(null, snaps.map(function(s){return s.review_count;})), hi = Math.max.apply(null, snaps.map(function(s){return s.review_count;}));
+    if(hi === lo) hi = lo + 1;
+    var X = function(d){ return L + (Date.parse(d) - t0) / Math.max(1, t1 - t0) * (W - L - R); };
+    var Y = function(v){ return T + (1 - (v - lo) / (hi - lo)) * (H - T - B); };
+    var pts = snaps.map(function(s){ return X(s.date).toFixed(1)+','+Y(s.review_count).toFixed(1); });
+    var last = snaps[snaps.length-1];
+    return '<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Reviews over time">'+
+      '<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(lo)+'" y2="'+Y(lo)+'" stroke="#E3E7E5"/><line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(hi)+'" y2="'+Y(hi)+'" stroke="#E3E7E5"/>'+
+      '<text x="'+(L-6)+'" y="'+(Y(lo)+4)+'" text-anchor="end">'+lo+'</text><text x="'+(L-6)+'" y="'+(Y(hi)+4)+'" text-anchor="end">'+hi+'</text>'+
+      '<polygon points="'+L+','+Y(lo)+' '+pts.join(' ')+' '+X(last.date).toFixed(1)+','+Y(lo)+'" fill="#0F9D8F" opacity=".1"/>'+
+      '<polyline points="'+pts.join(' ')+'" fill="none" stroke="#0F9D8F" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>'+
+      '<circle cx="'+X(last.date)+'" cy="'+Y(last.review_count)+'" r="4.5" fill="#0F9D8F" stroke="#fff" stroke-width="2"/>'+
+      '<text x="'+L+'" y="'+(H-6)+'">'+esc(snaps[0].date)+'</text><text x="'+(W-R)+'" y="'+(H-6)+'" text-anchor="end">'+esc(last.date)+'</text></svg>';
+  }
+
+  S.loadAll().then(function(d){
+    var app = document.getElementById('app');
+    var biz = d.businesses.find(function(b){ return b.card_id === id; });
+    var st = S.stats(d.history, id);
+    if(!id || (!biz && !st.snaps.length)){
+      app.innerHTML = '<div class="nope"><b>'+t('Hisobot topilmadi','Отчёт не найден')+'</b>'+t('Havolani Otvizcards’dan so‘rang.','Запросите ссылку у Otvizcards.')+'</div>';
+      setLang(lang); return;
+    }
+    var name = (biz && biz.name) || (st.snaps[0] && st.snaps[0].business_name) || '';
+    var has = st.snaps.length > 0, n = has ? days(st.firstDate, st.lastDate) : 0;
+    var goal = 10, reached = st.growth >= goal, in30 = n <= 30;
+    var perWeek = n >= 7 ? (st.growth / n * 7) : null;
+
+    var body = !has
+      ? '<div class="card"><h2>'+t('Kuzatuv boshlandi','Отслеживание запущено')+'</h2><p>'+t('Birinchi raqamlar ertaga paydo bo‘ladi. Sharhlar soni har kuni avtomatik yangilanadi.','Первые цифры появятся завтра. Число отзывов обновляется автоматически каждый день.')+'</p></div>'
+      : '<div class="hero"><div class="big">'+(st.growth>=0?'+':'')+st.growth+'</div><div class="cap">'+t('yangi Google sharh, '+n+' kunda','новых отзывов в Google за '+n+' дн.')+'</div></div>'+
+        '<div class="three">'+
+          '<div class="tile"><div class="k">'+t('Oldin','Было')+'</div><div class="v">'+st.before+'</div></div>'+
+          '<div class="tile"><div class="k">'+t('Hozir','Сейчас')+'</div><div class="v">'+st.after+'</div></div>'+
+          '<div class="tile"><div class="k">'+t('Reyting','Рейтинг')+'</div><div class="v">'+(st.rating!=null?st.rating.toFixed(1)+' <span class="st">★</span>':'—')+'</div></div>'+
+        '</div>'+
+        (st.snaps.length>1?'<div class="card"><h2>'+t('Sharhlar soni','Число отзывов')+'</h2>'+chart(st.snaps)+
+          (perWeek!=null?'<p style="margin-top:8px">'+t('O‘rtacha haftasiga <b>'+perWeek.toFixed(1)+'</b> ta yangi sharh.','В среднем <b>'+perWeek.toFixed(1)+'</b> новых отзывов в неделю.')+'</p>':'')+'</div>':'')+
+        '<div class="card"><div class="guar"><div class="dot '+(reached?'ok':'go')+'">'+(reached?'✓':Math.max(0,goal-st.growth))+'</div><p>'+
+          (reached
+            ? t('<b>Kafolat bajarildi:</b> 10 ta yangi sharh yig‘ildi.','<b>Гарантия выполнена:</b> собрано 10 новых отзывов.')
+            : (in30
+              ? t('<b>Kafolatgacha '+(goal-st.growth)+' ta sharh qoldi.</b> Karta kassada tursin va xodim har bir mijozga bitta jumlani aytsin.','<b>До гарантии осталось '+(goal-st.growth)+' отзывов.</b> Пусть карта стоит на кассе, а сотрудник говорит фразу каждому клиенту.')
+              : t('<b>Sharhlar sekin o‘syapti.</b> Yozing, kartaning joyi va xodimlar jumlasini birga ko‘rib chiqamiz.','<b>Отзывы растут медленно.</b> Напишите нам, вместе проверим место карты и фразу сотрудников.')))+
+        '</p></div></div>';
+
+    app.innerHTML =
+      '<header><div class="wrap"><div class="top"><div class="brand">'+
+        '<svg width="22" height="22" viewBox="0 0 100 100"><path fill="#0f9d8f" fill-rule="evenodd" d="M50 4l13.5 29.6 32.4 3.6-24.1 21.9 6.8 31.9L50 74.6 21.4 91l6.8-31.9L4.1 37.2l32.4-3.6zM50 38a12 12 0 100 24 12 12 0 000-24z"/></svg>Otvizcards</div>'+
+        '<div class="lang"><button data-l="uz">UZ</button><button data-l="ru">RU</button></div></div>'+
+        '<div class="eyebrow">'+t('Google sharhlar hisoboti','Отчёт по отзывам в Google')+'</div><h1>'+esc(name)+'</h1>'+
+        (has?'<div class="period">'+esc(st.firstDate)+' → '+esc(st.lastDate)+'</div>':'')+'</div></header>'+
+      '<div class="wrap">'+body+
+        '<a class="cta" href="https://ig.me/m/otvizcards.uz">'+t('Ikkinchi kassa yoki filial uchun karta: $12','Карта для второй кассы или филиала: $12')+'</a>'+
+        '<div class="foot">otvizcards.uz · '+t('raqamlar Google’dan har kuni olinadi','цифры берутся из Google каждый день')+'</div>'+
+      '</div>';
+    document.querySelectorAll('.lang button').forEach(function(b){ b.onclick = function(){ setLang(b.dataset.l); }; });
+    setLang(lang);
+  });
+})();
+</script>
+</body>
+</html>
