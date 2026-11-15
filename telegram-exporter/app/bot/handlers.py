@@ -1,6 +1,8 @@
 """Bot commands and button callbacks. Only OWNER_ID is ever answered."""
 from __future__ import annotations
 
+import asyncio
+import functools
 import logging
 import time
 from typing import Any
@@ -50,10 +52,37 @@ def register(ctx: BotContext) -> None:
     def is_owner_cb(event: events.CallbackQuery.Event) -> bool:
         return event.sender_id == owner
 
-    async def load_dialogs(force: bool = False) -> list[DialogItem]:
+    dialogs_lock = asyncio.Lock()
+
+    async def load_dialogs(event: Any, force: bool = False) -> list[DialogItem]:
         if state.dialogs_fresh() and not force:
             return state.dialogs
-        dialogs = await flood_retry(lambda: ctx.user.get_dialogs())
+        if dialogs_lock.locked():
+            await event.respond("⏳ Still loading your chats — results will appear in a moment.")
+        async with dialogs_lock:
+            # Another command may have just finished loading: reuse it (even for /chats).
+            if state.dialogs and time.monotonic() - state.dialogs_fetched_at < 60:
+                return state.dialogs
+            return await _fetch_dialogs(event)
+
+    async def _fetch_dialogs(event: Any) -> list[DialogItem]:
+        status = await event.respond("⏳ Loading your chats… (can take a while if you have many)")
+
+        async def on_wait(seconds: int) -> None:
+            try:
+                await status.edit(f"⏳ Telegram rate limit — waiting {seconds}s, then loading continues…")
+            except Exception:  # noqa: BLE001 - cosmetic
+                pass
+            await asyncio.sleep(seconds)
+
+        # Let Telethon sleep through short flood waits *inside* get_dialogs instead of
+        # restarting the whole (long) listing from scratch each time.
+        previous = ctx.user.flood_sleep_threshold
+        ctx.user.flood_sleep_threshold = max(previous, 120)
+        try:
+            dialogs = await flood_retry(lambda: ctx.user.get_dialogs(), on_wait)
+        finally:
+            ctx.user.flood_sleep_threshold = previous
         state.dialogs = [
             DialogItem(
                 peer_id=d.id,
@@ -66,7 +95,25 @@ def register(ctx: BotContext) -> None:
             for d in dialogs
         ]
         state.dialogs_fetched_at = time.monotonic()
+        try:
+            await status.delete()
+        except Exception:  # noqa: BLE001 - cosmetic
+            pass
+        log.info("dialogs loaded", extra={"count": len(state.dialogs)})
         return state.dialogs
+
+    def reported(func):
+        """Reply with the error instead of failing silently."""
+
+        @functools.wraps(func)
+        async def wrapper(event: Any) -> None:
+            try:
+                await func(event)
+            except Exception as exc:  # noqa: BLE001
+                log.exception("command failed", extra={"text": getattr(event, "raw_text", "")})
+                await event.respond(f"⚠️ Error: {exc!r}\nFull details are in the Termux window / log.")
+
+        return wrapper
 
     def list_text() -> str:
         return f"**{state.listing_title}** ({len(state.listing)}) — choose a chat to export:"
@@ -74,12 +121,14 @@ def register(ctx: BotContext) -> None:
     # ---- commands -------------------------------------------------------
 
     @bot.on(events.NewMessage(pattern=r"^/(start|help)(@\w+)?$", func=is_owner_msg))
+    @reported
     async def cmd_start(event: events.NewMessage.Event) -> None:
         await event.respond(HELP)
 
     @bot.on(events.NewMessage(pattern=r"^/chats(@\w+)?$", func=is_owner_msg))
+    @reported
     async def cmd_chats(event: events.NewMessage.Event) -> None:
-        await load_dialogs(force=True)
+        await load_dialogs(event, force=True)
         state.listing, state.listing_title = state.dialogs, "Your chats"
         if not state.listing:
             await event.respond("No chats found.")
@@ -87,6 +136,7 @@ def register(ctx: BotContext) -> None:
         await event.respond(list_text(), buttons=dialogs_keyboard(state.listing, 0))
 
     @bot.on(events.NewMessage(pattern=r"^/search(@\w+)?(\s+(?P<q>.+))?$", func=is_owner_msg))
+    @reported
     async def cmd_search(event: events.NewMessage.Event) -> None:
         query = (event.pattern_match.group("q") or "").strip()
         if not query:
@@ -97,7 +147,7 @@ def register(ctx: BotContext) -> None:
         await run_search(event, query)
 
     async def run_search(event: events.NewMessage.Event, query: str) -> None:
-        await load_dialogs()
+        await load_dialogs(event)
         results = state.search(query)
         if not results:
             await event.respond(f"No chats match “{query}”. Try another name, or /chats to browse.")
@@ -106,6 +156,7 @@ def register(ctx: BotContext) -> None:
         await event.respond(list_text(), buttons=dialogs_keyboard(results, 0))
 
     @bot.on(events.NewMessage(pattern=r"^/status(@\w+)?$", func=is_owner_msg))
+    @reported
     async def cmd_status(event: events.NewMessage.Event) -> None:
         if jobs.busy and jobs.progress:
             await event.respond(jobs.progress.render())
@@ -120,6 +171,7 @@ def register(ctx: BotContext) -> None:
             await event.respond("No export is running.")
 
     @bot.on(events.NewMessage(pattern=r"^/cancel(@\w+)?$", func=is_owner_msg))
+    @reported
     async def cmd_cancel(event: events.NewMessage.Event) -> None:
         if jobs.busy:
             await jobs.cancel()
@@ -130,6 +182,7 @@ def register(ctx: BotContext) -> None:
             await event.respond("Nothing to cancel.")
 
     @bot.on(events.NewMessage(pattern=r"^/resume(@\w+)?$", func=is_owner_msg))
+    @reported
     async def cmd_resume(event: events.NewMessage.Event) -> None:
         if jobs.busy:
             await event.respond("An export is already running — see /status.")
@@ -142,6 +195,7 @@ def register(ctx: BotContext) -> None:
         jobs.start(job.chat.name, progress, lambda: run_job(ctx, job, progress, resume=True))
 
     @bot.on(events.NewMessage(pattern=r"^/discard(@\w+)?$", func=is_owner_msg))
+    @reported
     async def cmd_discard(event: events.NewMessage.Event) -> None:
         if jobs.busy:
             await event.respond("Stop the running export first (/cancel).")
@@ -150,6 +204,7 @@ def register(ctx: BotContext) -> None:
         await event.respond(f"Deleted the unfinished export of {name}." if name else "Nothing to discard.")
 
     @bot.on(events.NewMessage(func=lambda e: is_owner_msg(e) and not (e.raw_text or "").startswith("/")))
+    @reported
     async def on_text(event: events.NewMessage.Event) -> None:
         if state.awaiting_search:
             state.awaiting_search = False
@@ -189,7 +244,7 @@ def register(ctx: BotContext) -> None:
             return
         if data.startswith("pg:"):
             if not state.listing:
-                await load_dialogs()
+                await load_dialogs(event)
                 state.listing = state.dialogs
             await event.edit(list_text(), buttons=dialogs_keyboard(state.listing, int(data[3:])))
             return
